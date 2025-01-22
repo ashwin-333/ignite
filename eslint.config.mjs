@@ -22,6 +22,11 @@ export default [
       "react/react-in-jsx-scope": "off",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
   },
   pluginJs.configs.recommended,
 ];
