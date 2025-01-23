@@ -1,4 +1,4 @@
-# habit heatmap
+# ignite
 
 The Problem it Solves - Many individuals struggle to stick to habits because of a lack of visibility into their progress and consistency. Traditional habit trackers often feel overwhelming or fail to provide actionable insights.
 
