@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useRouter } from "expo-router";
 
 const habits = [
-  { name: "Drink water", image: require("/Users/ftc/habit-heatmap/assets/images/droplet.png") },
-  { name: "Run", image: require("/Users/ftc/habit-heatmap/assets/images/running.png") },
-  { name: "Read books", image: require("/Users/ftc/habit-heatmap/assets/images/book.png") },
-  { name: "Meditate", image: require("/Users/ftc/habit-heatmap/assets/images/meditate.png") },
-  { name: "Study", image: require("/Users/ftc/habit-heatmap/assets/images/work.png") },
-  { name: "Journal", image: require("/Users/ftc/habit-heatmap/assets/images/journal.png") },
+  { name: "Drink water", image: require("../../assets/images/droplet.png") },
+  { name: "Run", image: require("../../assets/images/running.png") },
+  { name: "Read books", image: require("../../assets/images/book.png") },
+  { name: "Meditate", image: require("../../assets/images/meditate.png") },
+  { name: "Study", image: require("../../assets/images/work.png") },
+  { name: "Journal", image: require("../../assets/images/journal.png") },
 ];
 
 export default function RegisterStep3() {

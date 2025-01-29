@@ -44,7 +44,7 @@ export default function LoginScreen() {
 
       {/* Google Sign-In Button (Smaller) */}
       <TouchableOpacity style={styles.googleButton}>
-        <Image source={require("/Users/ftc/habit-heatmap/assets/images/google.png")} style={styles.googleIcon} />
+        <Image source={require("../../assets/images/google.png")} style={styles.googleIcon} />
         <Text style={styles.googleButtonText}>Sign in with Google</Text>
       </TouchableOpacity>
 
