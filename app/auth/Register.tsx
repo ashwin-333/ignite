@@ -1,21 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Stack } from "expo-router";
 
-export default function Register() {
+export default function RegisterLayout() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Register Screen</Text>
-    </View>
+    <Stack initialRouteName="auth/RegisterStep1">
+      <Stack.Screen name="auth/RegisterStep1" options={{ headerShown: false }} />
+      <Stack.Screen name="auth/RegisterStep2" options={{ headerShown: false }} />
+      <Stack.Screen name="auth/RegisterStep3" options={{ headerShown: false }} />
+    </Stack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 20,
-  },
-});
