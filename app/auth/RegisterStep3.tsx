@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 
 const habits = [
@@ -23,57 +23,132 @@ export default function RegisterStep3() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Choose Your First Habits</Text>
-      <Text style={styles.subtitle}>You may add more habits later</Text>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backText}>←</Text>
-      </TouchableOpacity>
-      <View style={styles.grid}>
-        {habits.map((habit, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.habitBox, selectedHabits.includes(habit.name) && styles.selected]}
-            onPress={() => toggleHabit(habit.name)}
-          >
-            <Image source={habit.image} style={styles.habitImage} />
-            <Text>{habit.name}</Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Sign up</Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push("/")}>
-        <Text style={styles.buttonText}>Finish</Text>
+      <View style={styles.content}>
+        <Text style={styles.title}>Choose your first habits</Text>
+        <Text style={styles.subtitle}>You may add more habits later</Text>
+
+        <ScrollView contentContainerStyle={styles.grid}>
+          {habits.map((habit, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.habitBox, selectedHabits.includes(habit.name) && styles.selected]}
+              onPress={() => toggleHabit(habit.name)}
+            >
+              <Image source={habit.image} style={styles.habitImage} />
+              <Text style={styles.habitName}>{habit.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      <TouchableOpacity style={styles.finishButton} onPress={() => router.push("/")}>
+        <Text style={styles.finishButtonText}>Finish</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff", justifyContent: "center" },
-  title: { fontSize: 24, fontWeight: "bold", textAlign: "center" },
-  subtitle: { textAlign: "center", marginBottom: 20 },
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center" },
-  habitBox: {
-    width: 100,
-    height: 100,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 15,
-    margin: 5,
-    borderWidth: 1,
-    borderRadius: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+  },
+  header: {
+    backgroundColor: "#fff",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   backButton: {
     position: "absolute",
-    top: 50,
+    top: 15,
     left: 20,
   },
   backText: {
     fontSize: 24,
     color: "#000",
   },
-  selected: { backgroundColor: "#DDD" },
-  habitImage: { width: 40, height: 40, marginBottom: 5 },
-  button: { backgroundColor: "#000", padding: 15, borderRadius: 8, marginTop: 20, alignItems: "center" },
-  buttonText: { color: "#fff" },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    paddingBottom: 20,
+  },
+  habitBox: {
+    width: "45%",
+    margin: "2.5%",
+    aspectRatio: 1,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  selected: {
+    borderColor: "#7948FF",
+    borderWidth: 2,
+  },
+  habitImage: {
+    width: 40,
+    height: 40,
+    marginBottom: 8,
+  },
+  habitName: {
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  finishButton: {
+    backgroundColor: "#000",
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  finishButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });

@@ -1,15 +1,36 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useRouter } from "expo-router";
+import { auth, googleProvider } from "../firebaseConfig";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential) {
+        console.log("User signed in:", result.user);
+        router.push("/auth/RegisterStep3");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Google Sign-In Error:", error.message);
+        alert("Error signing in with Google: " + error.message);
+      } else {
+        console.error("Unknown error occurred during Google Sign-In", error);
+        alert("An unknown error occurred during Google Sign-In");
+      }
+    }
+  };
+
   const handleLogin = () => {
     if (email.trim() !== "" && password.trim() !== "") {
-      router.replace("/"); // Navigate to the Home (index.tsx)
+      router.replace("/");
     } else {
       alert("Please enter both email and password");
     }
@@ -17,7 +38,6 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 🔙 Back Button to Splash Screen */}
       <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
@@ -42,13 +62,11 @@ export default function LoginScreen() {
         secureTextEntry
       />
 
-      {/* Google Sign-In Button (Smaller) */}
-      <TouchableOpacity style={styles.googleButton}>
+      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
         <Image source={require("../../assets/images/google.png")} style={styles.googleIcon} />
         <Text style={styles.googleButtonText}>Sign in with Google</Text>
       </TouchableOpacity>
 
-      {/* Next Button (Larger) */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Next</Text>
       </TouchableOpacity>
