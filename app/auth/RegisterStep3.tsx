@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 
 const habits = [
-  { name: "Drink water", image: require("../../assets/images/droplet.png") },
-  { name: "Run", image: require("../../assets/images/running.png") },
-  { name: "Read books", image: require("../../assets/images/book.png") },
-  { name: "Meditate", image: require("../../assets/images/meditate.png") },
-  { name: "Study", image: require("../../assets/images/work.png") },
-  { name: "Journal", image: require("../../assets/images/journal.png") },
+  { name: "Drink water", emoji: "💧" },
+  { name: "Run", emoji: "🏃" },
+  { name: "Read books", emoji: "📖" },
+  { name: "Meditate", emoji: "🧘" },
+  { name: "Study", emoji: "💻" },
+  { name: "Journal", emoji: "📓" },
 ];
 
 export default function RegisterStep3() {
@@ -41,7 +41,7 @@ export default function RegisterStep3() {
               style={[styles.habitBox, selectedHabits.includes(habit.name) && styles.selected]}
               onPress={() => toggleHabit(habit.name)}
             >
-              <Image source={habit.image} style={styles.habitImage} />
+              <Text style={styles.habitEmoji}>{habit.emoji}</Text>
               <Text style={styles.habitName}>{habit.name}</Text>
             </TouchableOpacity>
           ))}
@@ -128,9 +128,8 @@ const styles = StyleSheet.create({
     borderColor: "#7948FF",
     borderWidth: 2,
   },
-  habitImage: {
-    width: 40,
-    height: 40,
+  habitEmoji: {
+    fontSize: 40,
     marginBottom: 8,
   },
   habitName: {
