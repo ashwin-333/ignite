@@ -48,8 +48,11 @@ export default function RegisterStep3() {
         </ScrollView>
       </View>
 
-      <TouchableOpacity style={styles.finishButton} onPress={() => router.push("/")}>
-        <Text style={styles.finishButtonText}>Finish</Text>
+      <TouchableOpacity
+        style={styles.finishButton}
+        onPress={() => router.push("/tabs/Home")}
+      >
+      <Text style={styles.finishButtonText}>Finish</Text>
       </TouchableOpacity>
     </View>
   );
