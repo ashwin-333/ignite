@@ -10,6 +10,8 @@ export default function Layout() {
       <Stack.Screen name="auth/Login" options={{ headerShown: false }} />
       <Stack.Screen name="tabs/Home" options={{ headerShown: false }} />
       <Stack.Screen name="tabs/Explore" options={{ headerShown: false }} />
+      <Stack.Screen name="tabs/HeatMap" options={{ title: "HeatMap" }} />
+      <Stack.Screen name="tabs/CreateHabits" options={{ title: "Create Habits", headerLeft: () => null }} />
     </Stack>
   );
 }

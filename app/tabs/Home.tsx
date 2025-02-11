@@ -29,7 +29,10 @@ export default function HomeScreen() {
               <Text style={styles.habitName}>{habit.name}</Text>
               <Text style={styles.habitSubdetails}>{habit.details}</Text>
             </View>
-            <TouchableOpacity style={styles.checkmark}>
+            <TouchableOpacity
+              style={styles.checkmark}
+              onPress={() => router.push({ pathname: "/tabs/HeatMap", params: { habitName: habit.name, details: habit.details } })}
+            >
               <Text style={styles.checkmarkText}>✔</Text>
             </TouchableOpacity>
           </View>
@@ -50,11 +53,14 @@ export default function HomeScreen() {
             style={styles.navIcon}
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navAddButton}>
+        <TouchableOpacity onPress={() => router.push("/tabs/CreateHabits")}
+            style={styles.navAddButton} 
+            
+          >
           <Image
             source={require("../../assets/images/createlogo.svg")}
             style={styles.navAddIcon}
-          />
+        />
         </TouchableOpacity>
         <TouchableOpacity>
           <Image
