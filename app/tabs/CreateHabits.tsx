@@ -22,9 +22,6 @@ export default function CreateHabit() {
   const [habitName, setHabitName] = useState("Drink Water");
   const [habitGoal, setHabitGoal] = useState("2000 ML");
 
-  // (Optional) You can later add state for frequency if you wish.
-  // For now the UI displays a default frequency of "1 times" and "Daily" selected.
-
   const icons = [
     { icon: "💧", name: "Water" },
     { icon: "🏃", name: "Running" },
@@ -49,7 +46,6 @@ export default function CreateHabit() {
     { color: "#FF6B6B", name: "Coral" },
   ];
 
-  // Save habit data to Firestore under the current user's habits collection.
   const saveHabitToFirebase = async () => {
     const user = auth.currentUser;
     if (user) {
@@ -62,11 +58,9 @@ export default function CreateHabit() {
           color: selectedColor.color,
           colorName: selectedColor.name,
           goal: habitGoal,
-          // You can also add frequency data here if you manage that with state.
-          // For example: frequency: "Daily", count: 1
         });
         console.log("Habit added successfully!");
-        router.push("/tabs/Home"); // Redirect to Home after saving the habit.
+        router.push("/tabs/Home");
       } catch (error) {
         console.error("Error adding habit:", error);
       }
