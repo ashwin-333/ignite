@@ -5,19 +5,18 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Svg, Rect, Path } from "react-native-svg";
+import { getAuth } from "firebase/auth";
+import { doc, deleteDoc, getDocs } from "firebase/firestore";
+import { db } from "../firebaseConfig";
+import { collection, addDoc } from "firebase/firestore";
 
-// Inline back-button SVG
 function BackButtonSvg({ width = 60, height = 60 }) {
   return (
-    <Svg
-      width={width}
-      height={height}
-      viewBox="0 0 48 48"
-      fill="none"
-    >
+    <Svg width={width} height={height} viewBox="0 0 48 48" fill="none">
       <Rect x="0.5" y="0.5" width="47" height="47" rx="15.5" fill="white" />
       <Rect
         x="0.5"
@@ -38,13 +37,12 @@ function BackButtonSvg({ width = 60, height = 60 }) {
 }
 
 const MONTH_NAMES = [
-  "Jan","Feb","Mar","Apr","May","Jun",
-  "Jul","Aug","Sep","Oct","Nov","Dec"
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 const REAL_CURRENT_YEAR = new Date().getFullYear();
-const MAX_WEEKS = 5; // 7×5 matrix
+const MAX_WEEKS = 5;
 
-// Build a 7×5 matrix for each month: [dayOfWeek][weekIndex].
 function buildCalendarMatrix(year: number, monthIndex: number) {
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, monthIndex, 1).getDay();
@@ -64,11 +62,8 @@ function buildCalendarMatrix(year: number, monthIndex: number) {
 export default function HeatMapScreen() {
   const router = useRouter();
   const { habitName, details } = useLocalSearchParams();
-
-  // Default year: 2025
   const [currentYear, setCurrentYear] = useState(2025);
 
-  // Year nav
   const handlePrevYear = () => setCurrentYear((y) => y - 1);
   const handleNextYear = () => {
     if (currentYear < REAL_CURRENT_YEAR) {
@@ -77,7 +72,41 @@ export default function HeatMapScreen() {
   };
   const disableNextArrow = currentYear >= REAL_CURRENT_YEAR;
 
-  // Render the 12 months
+  const handleDeleteHabit = async () => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+  
+      if (!user) {
+        Alert.alert("Error", "User not logged in");
+        return;
+      }
+  
+      const habitsRef = collection(db, "users", user.uid, "habits");
+      const querySnapshot = await getDocs(habitsRef);
+      let habitToDelete = null;
+  
+      querySnapshot.forEach((doc) => {
+        if (doc.data().name === habitName) {
+          habitToDelete = doc.id;
+        }
+      });
+  
+      if (!habitToDelete) {
+        Alert.alert("Error", "Habit not found");
+        return;
+      }
+  
+      await deleteDoc(doc(db, "users", user.uid, "habits", habitToDelete));
+      Alert.alert("Success", "Habit deleted successfully");
+  
+      router.push("/tabs/Home");
+    } catch (error: any) {
+      console.error("Deletion Error:", error);
+      Alert.alert("Deletion Error", error.message);
+    }
+  };
+
   const renderMonths = () => {
     return MONTH_NAMES.map((monthName, monthIndex) => {
       const matrix = buildCalendarMatrix(currentYear, monthIndex);
@@ -88,14 +117,11 @@ export default function HeatMapScreen() {
           {matrix.map((weekArray, dayOfWeek) => (
             <View style={styles.dayRow} key={dayOfWeek}>
               {weekArray.map((dayNum, weekIdx) => {
-                // Only show green squares if it's 2025
                 let isCompleted = false;
                 if (currentYear === 2025 && dayNum != null) {
-                  // Jan 1–24
                   if (monthIndex === 0 && dayNum <= 24) {
                     isCompleted = true;
                   }
-                  // Feb 10–15
                   if (monthIndex === 1 && dayNum >= 10 && dayNum <= 15) {
                     isCompleted = true;
                   }
@@ -122,24 +148,16 @@ export default function HeatMapScreen() {
 
   return (
     <View style={styles.screenContainer}>
-
-      {/* Header with inline SVG back-button */}
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          {/* Increase the back button size by updating these props */}
           <BackButtonSvg width={45} height={45} />
         </TouchableOpacity>
-
-        {/* Left-aligned habit title/subtitle */}
         <View style={styles.titleContainer}>
           <Text style={styles.habitTitle}>{habitName}</Text>
           <Text style={styles.habitSubtitle}>{details}</Text>
         </View>
       </View>
-
-      {/* We'll use flex for the main content so we can pin the delete button to bottom */}
       <View style={styles.contentContainer}>
-        {/* Year nav */}
         <View style={styles.yearNav}>
           <TouchableOpacity onPress={handlePrevYear}>
             <Text style={styles.yearArrow}>{"<"}</Text>
@@ -160,8 +178,6 @@ export default function HeatMapScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Heatmap */}
         <View style={styles.heatmapContainer}>
           <ScrollView
             horizontal
@@ -171,23 +187,18 @@ export default function HeatMapScreen() {
             {renderMonths()}
           </ScrollView>
         </View>
-
-        {/* Streak info right under heatmap */}
         <View style={styles.streakContainer}>
           <Text style={styles.streakText}>Longest Streak: 24 🔥</Text>
           <Text style={styles.streakText}>Current Streak: 6</Text>
         </View>
       </View>
-
-      {/* Delete button pinned at bottom with spacing */}
-      <TouchableOpacity style={styles.deleteButton}>
+      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteHabit}>
         <Text style={styles.deleteButtonText}>Delete Habit</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
@@ -252,7 +263,7 @@ const styles = StyleSheet.create({
   monthsScrollContent: {
     alignItems: "flex-start",
     paddingRight: 40,
-    paddingBottom: 20, // extra space so scrollbar won't overlap squares
+    paddingBottom: 20,
   },
   monthWrapper: {
     alignItems: "center",
@@ -298,7 +309,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     marginHorizontal: 40,
-    marginBottom: 30, // spacing from bottom
+    marginBottom: 30,
     alignItems: "center",
   },
   deleteButtonText: {
@@ -307,4 +318,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
