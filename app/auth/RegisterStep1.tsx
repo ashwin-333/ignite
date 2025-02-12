@@ -55,7 +55,6 @@ export default function RegisterStep1() {
           firstName,
           lastName,
           email: user.email,
-          habits: [],
           profilePicture: user.photoURL || null,
         });
       }
