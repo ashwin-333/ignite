@@ -1,16 +1,9 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth, db, googleProvider } from "../firebaseConfig";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export default function RegisterStep1() {
   const router = useRouter();
@@ -44,10 +37,37 @@ export default function RegisterStep1() {
         alert("An unknown error occurred");
       }
     }
-  };  
+  };
 
-  const handleGoogleSignUp = () => {
-    router.push("/auth/RegisterStep3");
+  const handleGoogleSignUp = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      const displayName = user.displayName ? user.displayName.split(" ") : ["", ""];
+      const firstName = displayName[0] || "Unknown";
+      const lastName = displayName.length > 1 ? displayName.slice(1).join(" ") : "User";
+
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          firstName,
+          lastName,
+          email: user.email,
+          habits: [],
+          profilePicture: user.photoURL || null,
+        });
+      }
+
+      console.log("Google user signed up:", user.uid);
+      router.push("/auth/RegisterStep3");
+
+    } catch (error) {
+      console.error("Google Sign-Up Error:", error);
+      alert("Error signing up with Google. Please try again.");
+    }
   };
 
   return (
