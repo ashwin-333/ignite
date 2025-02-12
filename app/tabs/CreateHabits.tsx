@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, SafeAreaView, Modal, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
+import { auth, db } from "../firebaseConfig";
+import { collection, addDoc } from "firebase/firestore";
 
 export default function CreateHabit() {
   const router = useRouter();
   const [showIconPicker, setShowIconPicker] = useState(false);
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState({ icon: "💧", name: "Water" });
-  const [selectedColor, setSelectedColor] = useState({ color: "#90EE90", name: "Light Green" });
   const [habitName, setHabitName] = useState("Drink Water");
-  const [habitGoal, setHabitGoal] = useState("2000 ML");
+  const [habitGoal, setHabitGoal] = useState("8");
+  const [goalUnit, setGoalUnit] = useState("glasses");
 
   const icons = [
     { icon: "💧", name: "Water" },
@@ -24,30 +25,35 @@ export default function CreateHabit() {
     { icon: "🌅", name: "Morning" },
   ];
 
-  const colors = [
-    { color: "#90EE90", name: "Light Green" },
-    { color: "#87CEEB", name: "Sky Blue" },
-    { color: "#FFB6C1", name: "Light Pink" },
-    { color: "#DDA0DD", name: "Plum" },
-    { color: "#F0E68C", name: "Khaki" },
-    { color: "#98FB98", name: "Pale Green" },
-    { color: "#7948FF", name: "Purple" },
-    { color: "#FF6B6B", name: "Coral" },
-  ];
+  const saveHabitToFirebase = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const habitsRef = collection(db, "users", user.uid, "habits");
+        await addDoc(habitsRef, {
+          name: habitName,
+          icon: selectedIcon.icon,
+          goalValue: parseInt(habitGoal),
+          goalUnit: goalUnit
+        });
+        console.log("Habit added successfully!");
+        router.push("/tabs/Home"); // Redirect to Home after adding habit
+      } catch (error) {
+        console.error("Error adding habit:", error);
+      }
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         {/* Back Button */}
-        <TouchableOpacity 
-          onPress={() => router.push("/tabs/Home")} 
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={() => router.push("/tabs/Home")} style={styles.backButton}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
 
         {/* Title */}
-        <Text style={styles.header}>Create Custom Habit</Text>
+        <Text style={styles.header}><Text style={{ fontWeight: "bold" }}>Create</Text> Custom Habit</Text>
 
         {/* Name Input */}
         <Text style={styles.label}>NAME</Text>
@@ -65,71 +71,36 @@ export default function CreateHabit() {
           style={styles.input} 
           value={habitGoal}
           onChangeText={setHabitGoal}
-          placeholder="Enter goal (e.g., 2000 ML, 10000 steps)"
+          keyboardType="numeric"
+          placeholder="Enter goal (e.g., 2000 ML, 8 glasses)"
           placeholderTextColor="#666"
         />
 
-        {/* Icon and Color Selection */}
-        <Text style={styles.label}>ICON AND COLOR</Text>
-        <View style={styles.selectionRow}>
-          <TouchableOpacity 
-            style={styles.selectionButton}
-            onPress={() => setShowIconPicker(true)}
-          >
-            <Text style={styles.dropIcon}>{selectedIcon.icon}</Text>
-            <View>
-              <Text style={styles.selectionTitle}>{selectedIcon.name}</Text>
-              <Text style={styles.selectionSubtitle}>Icon</Text>
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.selectionButton}
-            onPress={() => setShowColorPicker(true)}
-          >
-            <View style={[styles.colorCircle, { backgroundColor: selectedColor.color }]} />
-            <View>
-              <Text style={styles.selectionTitle}>{selectedColor.name}</Text>
-              <Text style={styles.selectionSubtitle}>Color</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+        {/* Goal Unit Input */}
+        <Text style={styles.label}>GOAL UNIT</Text>
+        <TextInput 
+          style={styles.input} 
+          value={goalUnit}
+          onChangeText={setGoalUnit}
+          placeholder="e.g., glasses, steps"
+          placeholderTextColor="#666"
+        />
 
-        {/* Frequency Selection */}
-        <Text style={styles.label}>FREQUENCY</Text>
-        <View style={styles.frequencyContainer}>
-          <View style={styles.frequencyCountContainer}>
-            <Text style={styles.frequencyCount}>1 times</Text>
-            <View style={styles.arrowContainer}>
-              <Text style={styles.arrow}>▲</Text>
-              <Text style={styles.arrow}>▼</Text>
-            </View>
-          </View>
-          <View style={styles.frequencyOptions}>
-            <TouchableOpacity style={[styles.frequencyButton, styles.frequencyButtonSelected]}>
-              <Text style={styles.frequencyButtonText}>Daily</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.frequencyButton}>
-              <Text style={styles.frequencyButtonTextActive}>Weekly</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.frequencyButton}>
-              <Text style={styles.frequencyButtonText}>Monthly</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Icon Selection */}
+        <Text style={styles.label}>ICON</Text>
+        <TouchableOpacity style={styles.selectionButton} onPress={() => setShowIconPicker(true)}>
+          <Text style={styles.dropIcon}>{selectedIcon.icon}</Text>
+          <Text style={styles.selectionTitle}>{selectedIcon.name}</Text>
+        </TouchableOpacity>
 
-        {/* Add Button */}
-        <TouchableOpacity style={styles.addButton}>
+        {/* Add Habit Button */}
+        <TouchableOpacity style={styles.addButton} onPress={saveHabitToFirebase}>
           <Text style={styles.addButtonText}>Add Habit</Text>
         </TouchableOpacity>
       </View>
 
       {/* Icon Picker Modal */}
-      <Modal
-        visible={showIconPicker}
-        transparent={true}
-        animationType="slide"
-      >
+      <Modal visible={showIconPicker} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Select Icon</Text>
@@ -150,46 +121,7 @@ export default function CreateHabit() {
                 ))}
               </View>
             </ScrollView>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowIconPicker(false)}
-            >
-              <Text style={styles.modalCloseText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Color Picker Modal */}
-      <Modal
-        visible={showColorPicker}
-        transparent={true}
-        animationType="slide"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Color</Text>
-            <ScrollView>
-              <View style={styles.colorGrid}>
-                {colors.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.colorItem}
-                    onPress={() => {
-                      setSelectedColor(item);
-                      setShowColorPicker(false);
-                    }}
-                  >
-                    <View style={[styles.colorSample, { backgroundColor: item.color }]} />
-                    <Text style={styles.colorName}>{item.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowColorPicker(false)}
-            >
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowIconPicker(false)}>
               <Text style={styles.modalCloseText}>Close</Text>
             </TouchableOpacity>
           </View>
