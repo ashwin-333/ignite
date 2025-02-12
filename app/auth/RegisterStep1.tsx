@@ -8,9 +8,6 @@ import {
   Image,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { auth, googleProvider } from "../firebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 export default function RegisterStep1() {
   const router = useRouter();
@@ -19,34 +16,12 @@ export default function RegisterStep1() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleGoogleSignUp = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential) {
-        console.log("User signed up:", result.user);
-        router.push("/auth/RegisterStep3");
-      }
-    } catch (error) {
-      console.error("Google Sign-Up Error:", error);
-      alert("Error signing up with Google.");
-    }
+  const handleNext = () => {
+    router.push("/auth/RegisterStep2");
   };
 
-  const handleEmailSignUp = async () => {
-    if (!email || !password || !firstName || !lastName) {
-      alert("Please fill out all fields.");
-      return;
-    }
-
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      console.log("User registered with email:", email);
-      router.push("/auth/RegisterStep2");
-    } catch (error) {
-      console.error("Email Sign-Up Error:", error);
-      alert("Error signing up. Please try again.");
-    }
+  const handleGoogleSignUp = () => {
+    router.push("/auth/RegisterStep3");
   };
 
   return (
@@ -96,12 +71,12 @@ export default function RegisterStep1() {
         secureTextEntry
       />
 
-      {/* Next Button (Email/Password Sign-Up) */}
-      <TouchableOpacity style={styles.button} onPress={handleEmailSignUp}>
+      {/* Next Button (Just goes to Step 2) */}
+      <TouchableOpacity style={styles.button} onPress={handleNext}>
         <Text style={styles.buttonText}>Next</Text>
       </TouchableOpacity>
 
-      {/* Sign up with Google */}
+      {/* Sign up with Google (Just goes to Step 3) */}
       <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignUp}>
         <Image
           source={require("../../assets/images/google.png")}
