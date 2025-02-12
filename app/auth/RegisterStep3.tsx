@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
+import { auth, db } from "../firebaseConfig";
+import { collection, doc, setDoc } from "firebase/firestore";
 
 const habits = [
   { name: "Drink water", icon: "💧", goalUnit: "glasses", goalValue: 8 },
@@ -19,6 +21,30 @@ export default function RegisterStep3() {
     setSelectedHabits((prev) =>
       prev.includes(habit) ? prev.filter((h) => h !== habit) : [...prev, habit]
     );
+  };
+
+  const saveHabitsToFirebase = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userHabitsRef = collection(db, "users", user.uid, "habits");
+    
+    // Create a batch of promises to save all habits
+    const savePromises = selectedHabits.map(async (habitName) => {
+      const habit = habits.find(h => h.name === habitName);
+      if (!habit) return;
+
+      await setDoc(doc(userHabitsRef), {
+        name: habit.name,
+        icon: habit.icon,
+        goalUnit: habit.goalUnit,
+        goalValue: habit.goalValue,
+      });
+    });
+
+    await Promise.all(savePromises);
+    
+    router.push("/tabs/Home");
   };
 
   return (
@@ -48,12 +74,7 @@ export default function RegisterStep3() {
 
       <TouchableOpacity
         style={styles.finishButton}
-        onPress={() =>
-          router.push({
-            pathname: "/tabs/Home",
-            params: { selectedHabits: JSON.stringify(selectedHabits) },
-          })
-        }
+        onPress={saveHabitsToFirebase}
       >
         <Text style={styles.finishButtonText}>Finish</Text>
       </TouchableOpacity>

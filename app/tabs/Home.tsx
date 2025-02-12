@@ -2,34 +2,48 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+
+interface Habit {
+  id: string;
+  name: string;
+  icon: string;
+  goalValue: number;
+  goalUnit: string;
+}
 
 export default function HomeScreen() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
+  const [habits, setHabits] = useState<Habit[]>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       const user = auth.currentUser;
       if (user) {
+        // Fetch user's name
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
           setFirstName(userDoc.data().firstName);
         }
+
+        // Fetch user's habits
+        const habitsRef = collection(db, "users", user.uid, "habits");
+        const habitsSnapshot = await getDocs(habitsRef);
+        
+        const userHabits = habitsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Habit[];
+        
+        setHabits(userHabits);
       }
     };
 
     fetchUserData();
   }, []);
-
-  const habits = [
-    { name: "Drink Water", details: "2000 ML", emoji: "💧" },
-    { name: "Walk", details: "10000 STEPS", emoji: "🚶‍♂️" },
-    { name: "Water Plants", details: "1 TIMES", emoji: "🌿" },
-    { name: "Meditate", details: "30 MIN", emoji: "🧘" },
-  ];
 
   return (
     <View style={styles.container}>
@@ -41,15 +55,21 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.habitsContainer}>
         {habits.map((habit, index) => (
           <View key={index} style={styles.habitCard}>
-            <Text style={styles.habitEmoji}>{habit.emoji}</Text>
+            <Text style={styles.habitEmoji}>{habit.icon}</Text>
             <View style={styles.habitDetails}>
               <Text style={styles.habitName}>{habit.name}</Text>
-              <Text style={styles.habitSubdetails}>{habit.details}</Text>
+              <Text style={styles.habitSubdetails}>{habit.goalValue} {habit.goalUnit}</Text>
             </View>
             <TouchableOpacity
               style={styles.checkmark}
-              onPress={() => router.push({ pathname: "/tabs/HeatMap", params: { habitName: habit.name, details: habit.details } })}
-            >
+              onPress={() => router.push({ 
+                pathname: "/tabs/HeatMap", 
+                params: { 
+                  habitName: habit.name, 
+                  details: habit.goalValue + " " + habit.goalUnit 
+                } 
+              }
+            )}>
               <Text style={styles.checkmarkText}>✔</Text>
             </TouchableOpacity>
           </View>

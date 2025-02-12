@@ -21,7 +21,6 @@ export default function RegisterStep1() {
         firstName,
         lastName,
         email,
-        habits: [],
         profilePicture: null,
       });
   
