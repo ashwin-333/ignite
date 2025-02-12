@@ -1,26 +1,43 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-
-const habits = [
-  { name: "Drink Water", details: "2000 ML", emoji: "💧" },
-  { name: "Walk", details: "10000 STEPS", emoji: "🚶‍♂️" },
-  { name: "Water Plants", details: "1 TIMES", emoji: "🌿" },
-  { name: "Meditate", details: "30 MIN", emoji: "🧘" },
-];
+import { auth, db } from "../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          setFirstName(userDoc.data().firstName);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const habits = [
+    { name: "Drink Water", details: "2000 ML", emoji: "💧" },
+    { name: "Walk", details: "10000 STEPS", emoji: "🚶‍♂️" },
+    { name: "Water Plants", details: "1 TIMES", emoji: "🌿" },
+    { name: "Meditate", details: "30 MIN", emoji: "🧘" },
+  ];
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hi, Tejas 👋</Text>
+        <Text style={styles.greeting}>Hi, {firstName || "User"} 👋</Text>
         <Text style={styles.subtitle}>Let’s make habits together!</Text>
       </View>
 
-      {/* Habits List */}
       <ScrollView contentContainerStyle={styles.habitsContainer}>
         {habits.map((habit, index) => (
           <View key={index} style={styles.habitCard}>
@@ -39,40 +56,21 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
-      {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity>
-          <Image
-            source={require("../../assets/images/homelogo.svg")}
-            style={styles.navIcon}
-          />
+          <Image source={require("../../assets/images/homelogo.svg")} style={styles.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push("/tabs/Explore")}>
-          <Image
-            source={require("../../assets/images/directionlogo.svg")}
-            style={styles.navIcon}
-          />
+          <Image source={require("../../assets/images/directionlogo.svg")} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/tabs/CreateHabits")}
-            style={styles.navAddButton} 
-            
-          >
-          <Image
-            source={require("../../assets/images/createlogo.svg")}
-            style={styles.navAddIcon}
-        />
+        <TouchableOpacity onPress={() => router.push("/tabs/CreateHabits")} style={styles.navAddButton}>
+          <Image source={require("../../assets/images/createlogo.svg")} style={styles.navAddIcon} />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Image
-            source={require("../../assets/images/awardslogo.svg")}
-            style={styles.navIcon}
-          />
+          <Image source={require("../../assets/images/awardslogo.svg")} style={styles.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Image
-            source={require("../../assets/images/profilelogo.svg")}
-            style={styles.navIcon}
-          />
+          <Image source={require("../../assets/images/profilelogo.svg")} style={styles.navIcon} />
         </TouchableOpacity>
       </View>
     </View>

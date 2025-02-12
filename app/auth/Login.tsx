@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { auth, googleProvider } from "../firebaseConfig";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth, db } from "../firebaseConfig";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -11,28 +12,37 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential) {
-        console.log("User signed in:", result.user);
-        router.push("/tabs/Home");
-      }
+      const result = await signInWithPopup(auth, new GoogleAuthProvider());
+      console.log("User signed in:", result.user);
+      router.push("/tabs/Home");
     } catch (error) {
-      if (error instanceof Error) {
-        console.error("Google Sign-In Error:", error.message);
-        alert("Error signing in with Google: " + error.message);
-      } else {
-        console.error("Unknown error occurred during Google Sign-In", error);
-        alert("An unknown error occurred during Google Sign-In");
-      }
+      console.error("Google Sign-In Error:", (error as any).message);
+      alert("Error signing in with Google: " + (error as any).message);
     }
   };
 
-  const handleLogin = () => {
-    if (email.trim() !== "" && password.trim() !== "") {
-      router.replace("/");
-    } else {
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
       alert("Please enter both email and password");
+      return;
+    }
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        console.log("User found in Firestore:", user.uid);
+        router.replace("/tabs/Home");
+      } else {
+        alert("No user found with this email. Please sign up.");
+      }
+    } catch (error) {
+      console.error("Login Error:", (error as any).message);
+      alert("Invalid email or password.");
     }
   };
 

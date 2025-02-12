@@ -8,6 +8,9 @@ import {
   Image,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function RegisterStep1() {
   const router = useRouter();
@@ -16,9 +19,32 @@ export default function RegisterStep1() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleNext = () => {
-    router.push("/auth/RegisterStep2");
-  };
+  const handleNext = async () => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      await setDoc(doc(db, "users", user.uid), {
+        firstName,
+        lastName,
+        email,
+        habits: [],
+        profilePicture: null,
+      });
+  
+      console.log("User created:", user.uid);
+  
+      router.push("/auth/RegisterStep2");
+  
+    } catch (error) {
+      console.error("Sign-up Error:", error);
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("An unknown error occurred");
+      }
+    }
+  };  
 
   const handleGoogleSignUp = () => {
     router.push("/auth/RegisterStep3");
@@ -71,12 +97,10 @@ export default function RegisterStep1() {
         secureTextEntry
       />
 
-      {/* Next Button (Just goes to Step 2) */}
       <TouchableOpacity style={styles.button} onPress={handleNext}>
         <Text style={styles.buttonText}>Next</Text>
       </TouchableOpacity>
 
-      {/* Sign up with Google (Just goes to Step 3) */}
       <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignUp}>
         <Image
           source={require("../../assets/images/google.png")}
