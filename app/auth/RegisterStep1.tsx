@@ -13,7 +13,8 @@ import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 export default function RegisterStep1() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
 
   const handleGoogleSignUp = async () => {
@@ -22,7 +23,7 @@ export default function RegisterStep1() {
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential) {
         console.log("User signed up:", result.user);
-        router.push("/auth/RegisterStep3");
+        router.push("/auth/RegisterStep3"); // Navigate to step 3
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -43,17 +44,24 @@ export default function RegisterStep1() {
 
       <Text style={styles.title}>Sign up</Text>
 
-      {/* Full Name Input */}
-      <Text style={styles.label}>Full Name</Text>
+      <Text style={styles.label}>First Name</Text>
       <TextInput
         style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder="Enter your full name"
+        value={firstName}
+        onChangeText={setFirstName}
+        placeholder="Enter your first name"
         placeholderTextColor="#A1A1A1"
       />
 
-      {/* Email Input */}
+      <Text style={styles.label}>Last Name</Text>
+      <TextInput
+        style={styles.input}
+        value={lastName}
+        onChangeText={setLastName}
+        placeholder="Enter your last name"
+        placeholderTextColor="#A1A1A1"
+      />
+
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
