@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, googleProvider } from "../firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 export default function RegisterStep1() {
@@ -16,6 +17,7 @@ export default function RegisterStep1() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleGoogleSignUp = async () => {
     try {
@@ -23,16 +25,27 @@ export default function RegisterStep1() {
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential) {
         console.log("User signed up:", result.user);
-        router.push("/auth/RegisterStep3"); // Navigate to step 3
+        router.push("/auth/RegisterStep3");
       }
     } catch (error) {
-      if (error instanceof Error) {
-        console.error("Google Sign-Up Error:", error.message);
-        alert("Error signing up with Google: " + error.message);
-      } else {
-        console.error("Unknown error occurred during Google Sign-Up", error);
-        alert("An unknown error occurred during Google Sign-Up");
-      }
+      console.error("Google Sign-Up Error:", error);
+      alert("Error signing up with Google.");
+    }
+  };
+
+  const handleEmailSignUp = async () => {
+    if (!email || !password || !firstName || !lastName) {
+      alert("Please fill out all fields.");
+      return;
+    }
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      console.log("User registered with email:", email);
+      router.push("/auth/RegisterStep2");
+    } catch (error) {
+      console.error("Email Sign-Up Error:", error);
+      alert("Error signing up. Please try again.");
     }
   };
 
@@ -73,17 +86,27 @@ export default function RegisterStep1() {
         autoCapitalize="none"
       />
 
-      {/* Next Button */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/auth/RegisterStep2")}
-      >
+      <Text style={styles.label}>Password</Text>
+      <TextInput
+        style={styles.input}
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Enter your password"
+        placeholderTextColor="#A1A1A1"
+        secureTextEntry
+      />
+
+      {/* Next Button (Email/Password Sign-Up) */}
+      <TouchableOpacity style={styles.button} onPress={handleEmailSignUp}>
         <Text style={styles.buttonText}>Next</Text>
       </TouchableOpacity>
 
       {/* Sign up with Google */}
       <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignUp}>
-        <Image source={require("../../assets/images/google.png")} style={styles.googleIcon} />
+        <Image
+          source={require("../../assets/images/google.png")}
+          style={styles.googleIcon}
+        />
         <Text style={styles.googleButtonText}>Sign up with Google</Text>
       </TouchableOpacity>
     </View>
@@ -164,4 +187,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
