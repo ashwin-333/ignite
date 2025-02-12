@@ -15,7 +15,7 @@ export default function LoginScreen() {
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential) {
         console.log("User signed in:", result.user);
-        router.push("/auth/RegisterStep3");
+        router.push("/tabs/Home");
       }
     } catch (error) {
       if (error instanceof Error) {
