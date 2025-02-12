@@ -19,7 +19,6 @@ const users = [
 export default function Explore() {
   const router = useRouter(); // For navigation
   const [activeTab, setActiveTab] = useState("Explore"); // State for active tab
-
   const [searchText, setSearchText] = useState("");
 
   const filteredUsers = users.filter((user) =>
@@ -66,9 +65,7 @@ export default function Explore() {
                 user.added ? styles.addedButton : styles.addButton,
               ]}
             >
-              <Text
-                style={user.added ? styles.addedText : styles.addText}
-              >
+              <Text style={user.added ? styles.addedText : styles.addText}>
                 {user.added ? "✔" : "+"}
               </Text>
             </TouchableOpacity>
@@ -96,12 +93,21 @@ export default function Explore() {
             ]}
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navAddButton}>
-          <Image
-            source={require("../../assets/images/createlogo.svg")}
-            style={styles.navAddIcon}
-          />
-        </TouchableOpacity>
+
+        {/* Add Button */}
+        <View style={styles.navAddButtonWrapper}>
+          <TouchableOpacity style={styles.navAddButton}>
+            <Image
+              source={require("../../assets/images/Shape.svg")}
+              style={styles.navAddCircle}
+            />
+            <Image
+              source={require("../../assets/images/Shape-1.svg")} // Ensure this is the correct image path for the plus icon
+              style={styles.navAddIcon}
+            />
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity>
           <Image
             source={require("../../assets/images/awardslogo.svg")}
@@ -237,22 +243,29 @@ const styles = StyleSheet.create({
   activeNavIcon: {
     tintColor: "#7948FF",
   },
+  navAddButtonWrapper: {
+    position: "relative",
+    width: 70,
+    height: 70,
+  },
   navAddButton: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 70,
+    height: 70,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  navAddCircle: {
     width: 70,
     height: 70,
     borderRadius: 35,
     backgroundColor: "#7948FF",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   navAddIcon: {
+    position: "absolute",
     width: 40,
     height: 40,
-    resizeMode: "contain",
   },
 });

@@ -35,7 +35,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.greeting}>Hi, {firstName || "User"} 👋</Text>
-        <Text style={styles.subtitle}>Let’s make habits together!</Text>
+        <Text style={styles.subtitle}>Let's make habits together!</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.habitsContainer}>
@@ -57,21 +57,37 @@ export default function HomeScreen() {
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Image source={require("../../assets/images/homelogo.svg")} style={styles.navIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/tabs/Explore")}>
-          <Image source={require("../../assets/images/directionlogo.svg")} style={styles.navIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/tabs/CreateHabits")} style={styles.navAddButton}>
-          <Image source={require("../../assets/images/createlogo.svg")} style={styles.navAddIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require("../../assets/images/awardslogo.svg")} style={styles.navIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require("../../assets/images/profilelogo.svg")} style={styles.navIcon} />
-        </TouchableOpacity>
+        <View style={styles.bottomNavContent}>
+          <TouchableOpacity>
+            <Image source={require("../../assets/images/homelogo.svg")} style={styles.navIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/tabs/Explore")}>
+            <Image source={require("../../assets/images/directionlogo.svg")} style={styles.navIcon} />
+          </TouchableOpacity>
+          
+          <View style={styles.navAddButtonWrapper}>
+            <TouchableOpacity 
+              style={styles.navAddButton}
+              onPress={() => router.push("/tabs/CreateHabits")}
+            >
+              <Image
+                source={require("../../assets/images/Shape.svg")}
+                style={styles.navAddCircle}
+              />
+              <Image
+                source={require("../../assets/images/Shape-1.svg")}
+                style={styles.navAddIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity>
+            <Image source={require("../../assets/images/awardslogo.svg")} style={styles.navIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image source={require("../../assets/images/profilelogo.svg")} style={styles.navIcon} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -151,10 +167,6 @@ const styles = StyleSheet.create({
     color: "green",
   },
   bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    padding: 15,
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -163,28 +175,43 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
+    paddingVertical: 15,
+  },
+  bottomNavContent: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    paddingHorizontal: 20,
   },
   navIcon: {
     width: 28,
     height: 28,
     resizeMode: "contain",
   },
+  navAddButtonWrapper: {
+    position: "relative",
+    width: 70,
+    height: 70,
+  },
   navAddButton: {
+    position: "absolute",
+    top: 0, // Changed from -35 to -20 for better alignment
+    width: 70,
+    height: 70,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  navAddCircle: {
     width: 70,
     height: 70,
     borderRadius: 35,
     backgroundColor: "#7948FF",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   navAddIcon: {
+    position: "absolute",
     width: 40,
     height: 40,
     resizeMode: "contain",
+    tintColor: "#fff",
   },
 });
