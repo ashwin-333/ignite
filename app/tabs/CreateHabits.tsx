@@ -15,12 +15,15 @@ import { collection, addDoc } from "firebase/firestore";
 
 export default function CreateHabit() {
   const router = useRouter();
+
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState({ icon: "💧", name: "Water" });
   const [selectedColor, setSelectedColor] = useState({ color: "#90EE90", name: "Light Green" });
   const [habitName, setHabitName] = useState("Drink Water");
   const [habitGoal, setHabitGoal] = useState("2000 ML");
+
+  const [frequencyCount, setFrequencyCount] = useState(1);
 
   const icons = [
     { icon: "💧", name: "Water" },
@@ -67,21 +70,28 @@ export default function CreateHabit() {
     }
   };
 
+  const incrementFrequency = () => setFrequencyCount((prev) => prev + 1);
+  const decrementFrequency = () =>
+    setFrequencyCount((prev) => (prev > 1 ? prev - 1 : 1));
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+    <SafeAreaView style={styles.screenContainer}>
+      {/* TOP WHITE HEADER */}
+      <View style={styles.topHeader}>
         {/* Back Button */}
         <TouchableOpacity 
           onPress={() => router.push("/tabs/Home")} 
           style={styles.backButton}
         >
-          <Text style={styles.backButtonText}>←</Text>
+          <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
+        {/* Page Title */}
+        <Text style={styles.pageTitle}>Create Custom Habit</Text>
+      </View>
 
-        {/* Title */}
-        <Text style={styles.header}>Create Custom Habit</Text>
-
-        {/* Name Input */}
+      {/* MAIN CONTENT SCROLLVIEW */}
+      <ScrollView style={styles.contentContainer} bounces={false}>
+        {/* NAME Input */}
         <Text style={styles.label}>NAME</Text>
         <TextInput 
           style={styles.input} 
@@ -91,7 +101,7 @@ export default function CreateHabit() {
           placeholderTextColor="#666"
         />
 
-        {/* Goal Input */}
+        {/* GOAL Input */}
         <Text style={styles.label}>GOAL</Text>
         <TextInput 
           style={styles.input} 
@@ -101,7 +111,7 @@ export default function CreateHabit() {
           placeholderTextColor="#666"
         />
 
-        {/* Icon and Color Selection */}
+        {/* ICON AND COLOR */}
         <Text style={styles.label}>ICON AND COLOR</Text>
         <View style={styles.selectionRow}>
           <TouchableOpacity 
@@ -127,22 +137,29 @@ export default function CreateHabit() {
           </TouchableOpacity>
         </View>
 
-        {/* Frequency Selection */}
+        {/* FREQUENCY */}
         <Text style={styles.label}>FREQUENCY</Text>
         <View style={styles.frequencyContainer}>
+          {/* Arrows + count */}
           <View style={styles.frequencyCountContainer}>
-            <Text style={styles.frequencyCount}>1 times</Text>
+            <Text style={styles.frequencyCount}>{frequencyCount} times</Text>
             <View style={styles.arrowContainer}>
-              <Text style={styles.arrow}>▲</Text>
-              <Text style={styles.arrow}>▼</Text>
+              <TouchableOpacity onPress={incrementFrequency}>
+                <Text style={styles.arrow}>▲</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={decrementFrequency}>
+                <Text style={styles.arrow}>▼</Text>
+              </TouchableOpacity>
             </View>
           </View>
+
+          {/* Frequency Options */}
           <View style={styles.frequencyOptions}>
             <TouchableOpacity style={[styles.frequencyButton, styles.frequencyButtonSelected]}>
-              <Text style={styles.frequencyButtonText}>Daily</Text>
+              <Text style={styles.frequencyButtonTextActive}>Daily</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.frequencyButton}>
-              <Text style={styles.frequencyButtonTextActive}>Weekly</Text>
+              <Text style={styles.frequencyButtonText}>Weekly</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.frequencyButton}>
               <Text style={styles.frequencyButtonText}>Monthly</Text>
@@ -150,13 +167,13 @@ export default function CreateHabit() {
           </View>
         </View>
 
-        {/* Add Habit Button */}
+        {/* ADD HABIT BUTTON */}
         <TouchableOpacity style={styles.addButton} onPress={saveHabitToFirebase}>
           <Text style={styles.addButtonText}>Add Habit</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
-      {/* Icon Picker Modal */}
+      {/* ICON PICKER MODAL */}
       <Modal
         visible={showIconPicker}
         transparent={true}
@@ -192,7 +209,7 @@ export default function CreateHabit() {
         </View>
       </Modal>
 
-      {/* Color Picker Modal */}
+      {/* COLOR PICKER MODAL */}
       <Modal
         visible={showColorPicker}
         transparent={true}
@@ -231,14 +248,19 @@ export default function CreateHabit() {
   );
 }
 
+/* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F7FE",
   },
-  content: {
-    flex: 1,
-    padding: 20,
+  topHeader: {
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
   backButton: {
     width: 40,
@@ -247,29 +269,38 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginRight: 10,
   },
-  backButtonText: {
+  backArrow: {
     fontSize: 20,
+    color: "#333",
   },
-  header: {
-    fontSize: 24,
+  pageTitle: {
+    fontSize: 26,
     fontWeight: "bold",
-    marginBottom: 30,
+    color: "#232323",
+  },
+
+  contentContainer: {
+    flex: 1,
+    padding: 20,
   },
   label: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "bold",
     color: "#666",
-    marginBottom: 8,
+    marginBottom: 6,
+    marginTop: 10,
   },
   input: {
     fontSize: 16,
-    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    marginBottom: 24,
+    marginBottom: 20,
+    paddingVertical: 5,
+    color: "#333",
   },
+
   selectionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -278,10 +309,12 @@ const styles = StyleSheet.create({
   selectionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
     width: "48%",
+    borderWidth: 1,
+    borderColor: "#E5E7ED",
   },
   dropIcon: {
     fontSize: 20,
@@ -301,10 +334,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
   },
+
   frequencyContainer: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7ED",
   },
   frequencyCountContainer: {
     flexDirection: "row",
@@ -314,18 +350,21 @@ const styles = StyleSheet.create({
   },
   frequencyCount: {
     fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
   },
   arrowContainer: {
     justifyContent: "center",
+    alignItems: "center",
   },
   arrow: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#666",
-    lineHeight: 14,
+    lineHeight: 16,
   },
   frequencyOptions: {
     flexDirection: "row",
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f5f5",
     borderRadius: 8,
     padding: 4,
   },
@@ -336,26 +375,31 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   frequencyButtonSelected: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
   frequencyButtonText: {
     color: "#666",
+    fontWeight: "500",
   },
   frequencyButtonTextActive: {
-    color: "#4169E1",
+    color: "#4A60FF",
+    fontWeight: "600",
   },
+
   addButton: {
-    backgroundColor: "#4169E1",
+    backgroundColor: "#4A60FF",
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
-    marginTop: "auto",
+    marginTop: 30,
+    marginBottom: 30,
   },
   addButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
   },
+
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
@@ -422,7 +466,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   modalCloseButton: {
-    backgroundColor: "#4169E1",
+    backgroundColor: "#4A60FF",
     padding: 15,
     borderRadius: 12,
     marginTop: 10,

@@ -11,8 +11,10 @@ export default function Layout() {
      <Stack.Screen name="tabs/Home" options={{ headerShown: false }} />
      <Stack.Screen name="tabs/Explore" options={{ headerShown: false }} />
      <Stack.Screen name="tabs/HeatMap" options={{ headerShown: false }} />
-     <Stack.Screen name="tabs/CreateHabits" options={{ title: "Create Habits", headerLeft: () => null }} />
+     <Stack.Screen name="tabs/CreateHabits" options={{ headerShown: false }} />
      <Stack.Screen name="tabs/StreakAward" options={{ headerShown: false }} />
+     <Stack.Screen name="tabs/Profile" options={{ headerShown: false }} />
+
    </Stack>
  );
 }

@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
@@ -22,43 +29,48 @@ export default function HomeScreen() {
       if (user) {
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
-
         if (userDoc.exists()) {
-          setFirstName(userDoc.data().firstName);
+          setFirstName(userDoc.data()?.firstName || "User");
         }
 
         const habitsRef = collection(db, "users", user.uid, "habits");
         const habitsSnapshot = await getDocs(habitsRef);
-
-        const userHabits = habitsSnapshot.docs.map(doc => ({
+        const userHabits = habitsSnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         })) as Habit[];
-
         setHabits(userHabits);
       }
     };
-
     fetchUserData();
   }, []);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Hi, {firstName || "User"} 👋</Text>
+    <View style={styles.screenContainer}>
+      <View style={styles.topContainer}>
+        <Text style={styles.greeting}>
+          Hi, {firstName || "User"} <Text style={{ fontSize: 24 }}>👋</Text>
+        </Text>
         <Text style={styles.subtitle}>Let's make habits together!</Text>
       </View>
 
+      <View style={styles.habitsSection}>
+        <Text style={styles.habitsTitle}>Habits</Text>
+      </View>
+
       <ScrollView contentContainerStyle={styles.habitsContainer}>
-        {habits.map((habit, index) => (
-          <View key={index} style={styles.habitCard}>
-            <Text style={styles.habitEmoji}>{habit.icon}</Text>
-            <View style={styles.habitDetails}>
-              <Text style={styles.habitName}>{habit.name}</Text>
-              <Text style={styles.habitSubdetails}>{habit.goal}</Text>
+        {habits.map((habit) => (
+          <View key={habit.id} style={styles.habitCard}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={styles.habitEmoji}>{habit.icon}</Text>
+              <View style={styles.habitTextContainer}>
+                <Text style={styles.habitName}>{habit.name}</Text>
+                <Text style={styles.habitGoal}>{habit.goal}</Text>
+              </View>
             </View>
+
             <TouchableOpacity
-              style={styles.checkmark}
+              style={styles.checkWrapper}
               onPress={() =>
                 router.push({
                   pathname: "/tabs/HeatMap",
@@ -69,55 +81,65 @@ export default function HomeScreen() {
                 })
               }
             >
-              <Text style={styles.checkmarkText}>✔</Text>
+              <Text style={styles.checkText}>✔</Text>
             </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        <View style={styles.bottomNavContent}>
-          <TouchableOpacity>
-            <Image source={require("../../assets/images/homelogo.svg")} style={styles.navIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/tabs/Explore")}>
-            <Image source={require("../../assets/images/directionlogo.svg")} style={styles.navIcon} />
-          </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/tabs/Home")}>
+          <Image
+            source={require("../../assets/images/homelogo.svg")}
+            style={[styles.navIcon, styles.activeNavIcon]}
+          />
+        </TouchableOpacity>
 
-          <View style={styles.navAddButtonWrapper}>
-            <TouchableOpacity style={styles.navAddButton} onPress={() => router.push("/tabs/CreateHabits")}>
-              <Image source={require("../../assets/images/Shape.svg")} style={styles.navAddCircle} />
-              <Image source={require("../../assets/images/Shape-1.svg")} style={styles.navAddIcon} />
-            </TouchableOpacity>
-          </View>
+        <TouchableOpacity onPress={() => router.push("/tabs/Explore")}>
+          <Image
+            source={require("../../assets/images/directionlogo.svg")}
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.push("/tabs/StreakAward")}>
-            <Image source={require("../../assets/images/awardslogo.svg")} style={styles.navIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Image source={require("../../assets/images/profilelogo.svg")} style={styles.navIcon} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={() => router.push("/tabs/CreateHabits")}>
+          <Image
+            source={require("../../assets/images/Shape.svg")}
+            style={styles.plusCircle}
+          />
+          <Image
+            source={require("../../assets/images/Shape-1.svg")}
+            style={styles.plusIcon}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/tabs/StreakAward")}>
+          <Image
+            source={require("../../assets/images/awardslogo.svg")}
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/tabs/Profile")}>
+          <Image
+            source={require("../../assets/images/profilelogo.svg")}
+            style={styles.navIcon}
+          />
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F5F7FE",
   },
-  header: {
-    padding: 20,
+  topContainer: {
     backgroundColor: "#fff",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   greeting: {
     fontSize: 24,
@@ -129,99 +151,101 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 5,
   },
-  habitsContainer: {
-    padding: 20,
+  habitsSection: {
+    paddingHorizontal: 20,
+    paddingTop: 15,
   },
-  habitCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 15,
-    marginBottom: 15,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  habitEmoji: {
-    fontSize: 30,
-    marginRight: 15,
-  },
-  habitDetails: {
-    flex: 1,
-  },
-  habitName: {
+  habitsTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
   },
-  habitSubdetails: {
-    fontSize: 14,
-    color: "#666",
+  habitsContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
-  checkmark: {
+  habitCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  habitEmoji: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  habitTextContainer: {
+    flexDirection: "column",
+  },
+  habitName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  habitGoal: {
+    fontSize: 14,
+    color: "#777",
+  },
+  checkWrapper: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#E7F9EE",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#C3ECC8",
   },
-  checkmarkText: {
+  checkText: {
     fontSize: 16,
-    fontWeight: "bold",
     color: "green",
+    fontWeight: "bold",
   },
   bottomNav: {
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
+    width: "90%",
+    height: 60,
     backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-    paddingVertical: 15,
-  },
-  bottomNavContent: {
+    borderRadius: 40,
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "center",
-    paddingHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 4,
   },
   navIcon: {
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
     resizeMode: "contain",
   },
-  navAddButtonWrapper: {
-    position: "relative",
-    width: 70,
-    height: 70,
+  activeNavIcon: {
+    tintColor: "#4A60FF",
   },
-  navAddButton: {
+  plusCircle: {
+    width: 48,
+    height: 48,
+    resizeMode: "contain",
+  },
+  plusIcon: {
     position: "absolute",
-    top: 0,
-    width: 70,
-    height: 70,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  navAddCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#7948FF",
-  },
-  navAddIcon: {
-    position: "absolute",
-    width: 40,
-    height: 40,
+    width: 22,
+    height: 22,
     resizeMode: "contain",
     tintColor: "#fff",
+    left: 13,
+    top: 13,
   },
 });
