@@ -76,30 +76,30 @@ export default function HeatMapScreen() {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
-  
+
       if (!user) {
         Alert.alert("Error", "User not logged in");
         return;
       }
-  
+
       const habitsRef = collection(db, "users", user.uid, "habits");
       const querySnapshot = await getDocs(habitsRef);
       let habitToDelete = null;
-  
+
       querySnapshot.forEach((doc) => {
         if (doc.data().name === habitName) {
           habitToDelete = doc.id;
         }
       });
-  
+
       if (!habitToDelete) {
         Alert.alert("Error", "Habit not found");
         return;
       }
-  
+
       await deleteDoc(doc(db, "users", user.uid, "habits", habitToDelete));
       Alert.alert("Success", "Habit deleted successfully");
-  
+
       router.push("/tabs/Home");
     } catch (error: any) {
       console.error("Deletion Error:", error);
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   contentContainer: {
-    flex: 1, 
+    flex: 1,
     justifyContent: "flex-start",
   },
   yearNav: {
@@ -287,9 +287,9 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   outOfMonthSquare: {
-    backgroundColor: "#FFF",
+    backgroundColor: "#f5f7fb",
     borderWidth: 1,
-    borderColor: "#FFF",
+    borderColor: "#f5f7fb",
   },
   completedSquare: {
     backgroundColor: "#C5ECB2",
