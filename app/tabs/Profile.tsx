@@ -201,7 +201,7 @@ export default function ProfileScreen() {
             style={styles.plusIcon}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/tabs/StreakAward")}>
+        <TouchableOpacity onPress={() => router.push("/tabs/Leaderboards")}>
           <Image
             source={require("../../assets/images/awardslogo.svg")}
             style={styles.navIcon}
