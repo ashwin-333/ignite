@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+interface DayObject {
+  day: number;
+  completed: boolean;
+}
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,24 +12,16 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Svg, Rect, Path } from "react-native-svg";
 import { getAuth } from "firebase/auth";
 import { doc, deleteDoc, getDocs } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+import { Svg, Rect, Path } from "react-native-svg";
+import { auth, db } from "../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
-
+// Back Button Component
 function BackButtonSvg({ width = 60, height = 60 }) {
   return (
     <Svg width={width} height={height} viewBox="0 0 48 48" fill="none">
       <Rect x="0.5" y="0.5" width="47" height="47" rx="15.5" fill="white" />
-      <Rect
-        x="0.5"
-        y="0.5"
-        width="47"
-        height="47"
-        rx="15.5"
-        stroke="#EAECF0"
-      />
       <Path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -36,109 +32,148 @@ function BackButtonSvg({ width = 60, height = 60 }) {
   );
 }
 
-const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-];
-const REAL_CURRENT_YEAR = new Date().getFullYear();
-const MAX_WEEKS = 5;
+// Constants
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAYS_IN_WEEK = 7;
 
-function buildCalendarMatrix(year: number, monthIndex: number) {
+// Build the calendar matrix for rendering the heatmap
+function buildCalendarMatrix(
+  year: number,
+  monthIndex: number,
+  completedDatesSet: Set<string>
+): (DayObject | null)[][] {  // This tells TypeScript the matrix contains DayObjects or null
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, monthIndex, 1).getDay();
 
-  const matrix = Array.from({ length: 7 }, () => Array(MAX_WEEKS).fill(null));
-  for (let week = 0; week < MAX_WEEKS; week++) {
+  const matrix = Array.from(
+    { length: Math.ceil((daysInMonth + firstDayOfWeek) / 7) },
+    () => Array.from({ length: 7 }, (): DayObject | null => null)
+  ) as (DayObject | null)[][];
+
+  let dayCounter = 1;
+  for (let week = 0; week < matrix.length; week++) {
     for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
-      const dayNum = week * 7 + dayOfWeek - firstDayOfWeek + 1;
-      if (dayNum >= 1 && dayNum <= daysInMonth) {
-        matrix[dayOfWeek][week] = dayNum;
+      if (week === 0 && dayOfWeek < firstDayOfWeek) continue;
+      if (dayCounter <= daysInMonth) {
+        const dateStr = `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(dayCounter).padStart(2, "0")}`;
+        matrix[week][dayOfWeek] = {
+          day: dayCounter,
+          completed: completedDatesSet.has(dateStr),
+        };
+        dayCounter++;
       }
     }
   }
+
   return matrix;
+}
+
+
+
+// Calculate streaks
+function calculateStreaks(completedDatesArray) {
+  const dates = completedDatesArray.map(date => new Date(date)).sort((a, b) => a - b);
+  let longestStreak = 0, currentStreak = 0, tempStreak = 1;
+  const today = new Date().setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < dates.length; i++) {
+    if (i > 0) {
+      const diff = (dates[i] - dates[i - 1]) / (1000 * 60 * 60 * 24);
+      tempStreak = diff === 1 ? tempStreak + 1 : 1;
+    }
+    longestStreak = Math.max(longestStreak, tempStreak);
+  }
+
+  if (dates.length && (today - dates[dates.length - 1].setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24) <= 1) {
+    currentStreak = tempStreak;
+  }
+
+  return { longestStreak, currentStreak };
 }
 
 export default function HeatMapScreen() {
   const router = useRouter();
-  const { habitName, details } = useLocalSearchParams();
-  const [currentYear, setCurrentYear] = useState(2025);
+  const { habitId, habitName, details } = useLocalSearchParams();
 
-  const handlePrevYear = () => setCurrentYear((y) => y - 1);
-  const handleNextYear = () => {
-    if (currentYear < REAL_CURRENT_YEAR) {
-      setCurrentYear((y) => y + 1);
-    }
-  };
-  const disableNextArrow = currentYear >= REAL_CURRENT_YEAR;
+  const [completedDates, setCompletedDates] = useState([]);
+  const [streaks, setStreaks] = useState({ longestStreak: 0, currentStreak: 0 });
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
-  const handleDeleteHabit = async () => {
-    try {
-      const auth = getAuth();
+  useEffect(() => {
+    const fetchHabitData = async () => {
       const user = auth.currentUser;
-
       if (!user) {
         Alert.alert("Error", "User not logged in");
         return;
       }
 
-      const habitsRef = collection(db, "users", user.uid, "habits");
-      const querySnapshot = await getDocs(habitsRef);
-      let habitToDelete = null;
+      try {
+        // 2) Use 'collection(db, ...)' to reference user’s habits
+        const habitsRef = collection(db, "users", user.uid, "habits");
+        const querySnapshot = await getDocs(habitsRef);
 
-      querySnapshot.forEach((doc) => {
-        if (doc.data().name === habitName) {
-          habitToDelete = doc.id;
+        let habitFound = false;
+
+        querySnapshot.forEach((docSnap) => {
+          if (docSnap.id === habitId) {
+            habitFound = true;
+            const { completedDates = [] } = docSnap.data();
+            setCompletedDates(completedDates);
+            setStreaks(calculateStreaks(completedDates));
+          }
+        });
+
+        if (!habitFound) {
+          Alert.alert("Error", "Habit not found");
         }
-      });
-
-      if (!habitToDelete) {
-        Alert.alert("Error", "Habit not found");
-        return;
+      } catch (error) {
+        console.error("Failed to fetch habit data:", error);
       }
+    };
 
-      await deleteDoc(doc(db, "users", user.uid, "habits", habitToDelete));
+    fetchHabitData();
+  }, [habitId]);
+
+  const handleDeleteHabit = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Error", "User not logged in");
+      return;
+    }
+    try {
+      // 3) Use 'doc(db, ...)' to reference the specific document to delete
+      const habitRef = doc(db, `users/${user.uid}/habits/${habitId}`);
+      await deleteDoc(habitRef);
       Alert.alert("Success", "Habit deleted successfully");
-
       router.push("/tabs/Home");
-    } catch (error: any) {
-      console.error("Deletion Error:", error);
-      Alert.alert("Deletion Error", error.message);
+    } catch (error) {
+      console.error("Error deleting habit:", error);
+      Alert.alert("Error", "Failed to delete habit.");
     }
   };
 
-  const renderMonths = () => {
-    return MONTH_NAMES.map((monthName, monthIndex) => {
-      const matrix = buildCalendarMatrix(currentYear, monthIndex);
+  
 
+  const renderMonths = () => {
+    const completedDatesSet = new Set(completedDates);
+
+    return MONTH_NAMES.map((monthName, monthIndex) => {
+      const matrix = buildCalendarMatrix(currentYear, monthIndex, completedDatesSet);
+      
       return (
         <View key={monthIndex} style={styles.monthWrapper}>
           <Text style={styles.monthTitle}>{monthName}</Text>
-          {matrix.map((weekArray, dayOfWeek) => (
-            <View style={styles.dayRow} key={dayOfWeek}>
-              {weekArray.map((dayNum, weekIdx) => {
-                let isCompleted = false;
-                if (currentYear === 2025 && dayNum != null) {
-                  if (monthIndex === 0 && dayNum <= 24) {
-                    isCompleted = true;
-                  }
-                  if (monthIndex === 1 && dayNum >= 10 && dayNum <= 15) {
-                    isCompleted = true;
-                  }
-                }
-                const isOutOfMonth = dayNum == null;
-
-                return (
-                  <View
-                    key={weekIdx}
-                    style={[
-                      styles.square,
-                      isOutOfMonth && styles.outOfMonthSquare,
-                      isCompleted && styles.completedSquare
-                    ]}
-                  />
-                );
-              })}
+          {matrix.map((week, rowIdx) => (
+            <View style={styles.dayRow} key={rowIdx}>
+              {week.map((dayObj: DayObject | null, colIdx) => (
+                <View
+                  key={colIdx}
+                  style={[
+                    styles.square,
+                    dayObj?.completed ? styles.completedSquare : null,
+                  ]}
+                />
+              ))}
             </View>
           ))}
         </View>
@@ -148,6 +183,7 @@ export default function HeatMapScreen() {
 
   return (
     <View style={styles.screenContainer}>
+      {/* Header */}
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <BackButtonSvg width={45} height={45} />
@@ -157,41 +193,38 @@ export default function HeatMapScreen() {
           <Text style={styles.habitSubtitle}>{details}</Text>
         </View>
       </View>
-      <View style={styles.contentContainer}>
-        <View style={styles.yearNav}>
-          <TouchableOpacity onPress={handlePrevYear}>
-            <Text style={styles.yearArrow}>{"<"}</Text>
-          </TouchableOpacity>
-          <Text style={styles.yearText}>{currentYear}</Text>
-          <TouchableOpacity
-            onPress={handleNextYear}
-            disabled={disableNextArrow}
-            style={disableNextArrow && { opacity: 0.6 }}
-          >
-            <Text
-              style={[
-                styles.yearArrow,
-                disableNextArrow && { color: "#999" }
-              ]}
-            >
-              {">"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.heatmapContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator
-            contentContainerStyle={styles.monthsScrollContent}
-          >
-            {renderMonths()}
-          </ScrollView>
-        </View>
-        <View style={styles.streakContainer}>
-          <Text style={styles.streakText}>Longest Streak: 24 🔥</Text>
-          <Text style={styles.streakText}>Current Streak: 6</Text>
-        </View>
+
+      {/* Year Navigation */}
+      <View style={styles.yearNav}>
+        <TouchableOpacity onPress={() => setCurrentYear((y) => y - 1)}>
+          <Text style={styles.yearArrow}>{"<"}</Text>
+        </TouchableOpacity>
+        <Text style={styles.yearText}>{currentYear}</Text>
+        <TouchableOpacity
+          onPress={() => setCurrentYear((y) => y + 1)}
+          disabled={currentYear >= new Date().getFullYear()}
+          style={currentYear >= new Date().getFullYear() && { opacity: 0.5 }}
+        >
+          <Text style={styles.yearArrow}>{">"}</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Heatmap */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.monthsScrollContent}
+      >
+        {renderMonths()}
+      </ScrollView>
+
+      {/* Streaks */}
+      <View style={styles.streakContainer}>
+        <Text style={styles.streakText}>🔥 Longest Streak: {streaks.longestStreak}</Text>
+        <Text style={styles.streakText}>💪 Current Streak: {streaks.currentStreak}</Text>
+      </View>
+
+      {/* Delete Habit */}
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteHabit}>
         <Text style={styles.deleteButtonText}>Delete Habit</Text>
       </TouchableOpacity>
