@@ -14,6 +14,8 @@ import {
   getDoc,
   collection,
   getDocs,
+  setDoc,
+  updateDoc,
   deleteDoc,
 } from "firebase/firestore";
 
@@ -22,6 +24,7 @@ interface Friend {
   firstName: string;
   lastName: string;
   profilePicture?: string;
+  friendPoints: number;
 }
 
 interface Achievement {
@@ -31,14 +34,23 @@ interface Achievement {
   icon: string;
 }
 
-interface ActivityItem {
+interface ActivityDoc {
+  dateKey: string;   
+  type: string;    
+  points: number;    
+  timestamp: string;  
+  description: string;  
+  trend?: string;    
+}
+
+interface Habit {
   id: string;
-  type: 'points' | 'challenge' | 'streak';
-  points?: number;
-  description: string;
-  date: string;
-  timestamp: string;
-  trend?: 'up' | 'down' | 'neutral';
+  name: string;
+  icon: string;
+  goal: string;
+  timesDone?: number;
+  doneDates?: string[];  
+  habitPoints?: number;   
 }
 
 export default function ProfileScreen() {
@@ -47,33 +59,38 @@ export default function ProfileScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
+
+  const [myUserPoints, setMyUserPoints] = useState(0);
+
+  const [activeTab, setActiveTab] = useState<
+    "Activity" | "Friends" | "Achievements"
+  >("Friends");
+
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [activeTab, setActiveTab] = useState<'Activity' | 'Friends' | 'Achievements'>('Friends');
-  const [achievements, setAchievements] = useState<Achievement[]>([
-    { id: '1', title: 'Best Runner!', date: '1 months ago', icon: '🏃' },
-    { id: '2', title: 'Best of the month!', date: '2 days ago', icon: '🏆' }
-  ]);
-  const [activityItems, setActivityItems] = useState<ActivityItem[]>([
-    { id: '1', type: 'points', points: 112, description: 'points earned!', date: 'Today', timestamp: '12:34 PM', trend: 'up' },
-    { id: '2', type: 'points', points: 62, description: 'points earned!', date: 'Today', timestamp: '07:12 AM', trend: 'up' },
-    { id: '3', type: 'challenge', description: 'Challenge completed!', date: 'Yesterday', timestamp: '14:12 PM', trend: 'neutral' },
-    { id: '4', type: 'streak', description: 'Weekly winning streak is broken!', date: '12 Jun', timestamp: '16:14 PM', trend: 'down' },
-    { id: '5', type: 'points', points: 96, description: 'points earned!', date: '11 Jun', timestamp: '17:45 PM', trend: 'up' },
-    { id: '6', type: 'points', points: 110, description: 'points earned!', date: '10 Jun', timestamp: '18:32 PM', trend: 'up' }
+
+  const [achievements] = useState<Achievement[]>([
+    { id: "1", title: "Best Runner!", date: "1 months ago", icon: "🏃" },
+    { id: "2", title: "Best of the month!", date: "2 days ago", icon: "🏆" },
   ]);
 
-  // 1) Fetch current user's profile info
+  const [activityItems, setActivityItems] = useState<ActivityDoc[]>([]);
+
+  const [allHabits, setAllHabits] = useState<Habit[]>([]);
+
+  // ---------------- 1) Fetch user’s doc
   useEffect(() => {
     const fetchUserData = async () => {
       const user = auth.currentUser;
       if (!user) return;
 
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
+      const userRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userRef);
+      if (userDocSnap.exists()) {
+        const data = userDocSnap.data();
         setFirstName(data.firstName || "User");
         setLastName(data.lastName || "");
         setProfilePicture(data.profilePicture || "");
+        setMyUserPoints(data.userPoints || 0);
       }
     };
     fetchUserData();
@@ -86,20 +103,98 @@ export default function ProfileScreen() {
 
       const friendsRef = collection(db, "users", user.uid, "friends");
       const snapshot = await getDocs(friendsRef);
-      const friendList: Friend[] = snapshot.docs.map((doc) => {
-        const friendData = doc.data();
-        return {
-          friendId: doc.id,
+
+      const friendList: Friend[] = [];
+      for (const docSnap of snapshot.docs) {
+        const friendData = docSnap.data();
+        const friendId = docSnap.id;
+
+        let friendPoints = 0;
+        const friendDocSnap = await getDoc(doc(db, "users", friendId));
+        if (friendDocSnap.exists()) {
+          friendPoints = friendDocSnap.data().userPoints || 0;
+        }
+
+        friendList.push({
+          friendId,
           firstName: friendData.firstName || "Unknown",
           lastName: friendData.lastName || "",
           profilePicture: friendData.profilePicture || "",
-        };
-      });
+          friendPoints,
+        });
+      }
       setFriends(friendList);
     };
-
     fetchFriends();
   }, []);
+
+  useEffect(() => {
+    const fetchHabits = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const habitsRef = collection(db, "users", user.uid, "habits");
+      const snap = await getDocs(habitsRef);
+
+      const loaded = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      })) as Habit[];
+
+      setAllHabits(loaded);
+    };
+    fetchHabits();
+  }, []);
+
+  useEffect(() => {
+    fetchActivitySubcollection();
+  }, []);
+
+  const fetchActivitySubcollection = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const activitiesRef = collection(db, "users", user.uid, "activities");
+    const snap = await getDocs(activitiesRef);
+
+    const loaded: ActivityDoc[] = [];
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      loaded.push({
+        dateKey: docSnap.id, // "2023-06-24"
+        type: data.type || "points",
+        points: data.points || 0,
+        timestamp: data.timestamp || "",
+        description: data.description || "points earned!",
+        trend: data.trend || "up",
+      });
+    });
+
+    loaded.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+    setActivityItems(loaded);
+  };
+
+  function getDateKey(d: Date) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  function isSameDay(d1: Date, d2: Date) {
+    return (
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
+    );
+  }
+  function formatTime(isoString: string) {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    const hours = date.getHours() % 12 || 12;
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const ampm = date.getHours() >= 12 ? "PM" : "AM";
+    return `${hours}:${minutes} ${ampm}`;
+  }
 
   const handleRemoveFriend = async (friendUid: string) => {
     const currentUser = auth.currentUser;
@@ -108,46 +203,92 @@ export default function ProfileScreen() {
     try {
       await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendUid));
       await deleteDoc(doc(db, "users", friendUid, "friends", currentUser.uid));
-
       setFriends((prev) => prev.filter((f) => f.friendId !== friendUid));
     } catch (error) {
       console.log("Error removing friend:", error);
     }
   };
 
-  const displayName = `${firstName} ${lastName}`.trim() || "User";
+  const handleUpdateActivity = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const now = new Date();
+    const todayKey = getDateKey(now);
+
+
+    let totalDailyPoints = 0;
+
+    allHabits.forEach((habit) => {
+      const doneDates = habit.doneDates || [];
+      const habitPts = habit.habitPoints || 0;
+
+      const completionsToday = doneDates.filter((iso) =>
+        isSameDay(new Date(iso), now)
+      ).length;
+
+      totalDailyPoints += completionsToday * habitPts;
+    });
+
+    const activitiesRef = collection(db, "users", user.uid, "activities");
+    const activityRef = doc(activitiesRef, todayKey);
+
+    const docSnap = await getDoc(activityRef);
+    const newTimestamp = now.toISOString();
+
+    if (docSnap.exists()) {
+      await updateDoc(activityRef, {
+        points: totalDailyPoints,
+        timestamp: newTimestamp,
+      });
+    } else {
+      await setDoc(activityRef, {
+        type: "points",
+        points: totalDailyPoints,
+        timestamp: newTimestamp,
+        description: "points earned today",
+        trend: "up",
+      });
+    }
+
+    fetchActivitySubcollection();
+  };
 
   const renderActivityTab = () => (
-    <ScrollView contentContainerStyle={styles.friendsContainer}>
-      <Text style={styles.friendsTitle}>Showing last month activity</Text>
-      {activityItems.map((item) => (
-        <View key={item.id} style={styles.friendCard}>
-          <View style={styles.friendInfo}>
-            <View>
-              <Text style={styles.friendName}>
-                {item.type === 'points' ? `${item.points} ${item.description}` : item.description}
-              </Text>
-              <Text style={styles.friendPoints}>{item.date}, {item.timestamp}</Text>
+    <View style={{ flex: 1 }}>
+      <TouchableOpacity
+        style={styles.updateActivityButton}
+        onPress={handleUpdateActivity}
+      >
+        <Text style={styles.updateActivityButtonText}>Update Activity</Text>
+      </TouchableOpacity>
+
+      <ScrollView contentContainerStyle={styles.friendsContainer}>
+        <Text style={styles.friendsTitle}>Your Daily Points</Text>
+
+        {activityItems.map((act) => {
+          const dateObj = new Date(act.timestamp);
+          const shortTime = formatTime(act.timestamp);
+
+          const isToday = isSameDay(dateObj, new Date());
+
+          return (
+            <View key={act.dateKey} style={styles.friendCard}>
+              <View style={styles.friendInfo}>
+                <View>
+                  <Text style={styles.friendName}>
+                    {act.points} {act.points === 1 ? "Point" : "Points"}
+                  </Text>
+                  <Text style={styles.friendPoints}>
+                    {isToday ? "Today" : act.dateKey}, {shortTime}
+                  </Text>
+                </View>
+              </View>
             </View>
-          </View>
-          {item.trend === 'up' && (
-            <View style={styles.trendIndicator}>
-              <Text style={styles.upTrend}>↑</Text>
-            </View>
-          )}
-          {item.trend === 'down' && (
-            <View style={styles.trendIndicator}>
-              <Text style={styles.downTrend}>↓</Text>
-            </View>
-          )}
-          {item.trend === 'neutral' && (
-            <View style={styles.medalContainer}>
-              <Text style={styles.medalEmoji}>🏅</Text>
-            </View>
-          )}
-        </View>
-      ))}
-    </ScrollView>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 
   const renderFriendsTab = () => (
@@ -170,9 +311,12 @@ export default function ProfileScreen() {
                 <Text style={styles.friendName}>
                   {friendDisplayName || "Unknown"}
                 </Text>
-                <Text style={styles.friendPoints}>912 Points</Text>
+                <Text style={styles.friendPoints}>
+                  {friend.friendPoints} Points
+                </Text>
               </View>
             </View>
+
             <TouchableOpacity
               style={styles.trashButtonBox}
               onPress={() => handleRemoveFriend(friend.friendId)}
@@ -207,11 +351,12 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 
+  const displayName = `${firstName} ${lastName}`.trim() || "User";
+
   return (
     <View style={styles.screenContainer}>
-      {/* TOP CONTAINER */}
+      {/* TOP */}
       <View style={styles.topContainer}>
-        {/* Header Row */}
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>Your Profile</Text>
           <TouchableOpacity
@@ -225,7 +370,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* User Info */}
         <View style={styles.userInfoRow}>
           <Image
             source={
@@ -239,40 +383,60 @@ export default function ProfileScreen() {
             <Text style={styles.userName}>{displayName}</Text>
             <View style={styles.pointsContainer}>
               <Text style={styles.pointsMedal}>🏅</Text>
-              <Text style={styles.pointsText}>1452 Points</Text>
+              <Text style={styles.pointsText}>{myUserPoints} Points</Text>
             </View>
           </View>
         </View>
 
-        {/* Tabs */}
+        {/* TABS */}
         <View style={styles.tabPill}>
-          <TouchableOpacity 
-            style={[styles.tabItem, activeTab === 'Activity' ? styles.activeTab : null]}
-            onPress={() => setActiveTab('Activity')}
+          <TouchableOpacity
+            style={[styles.tabItem, activeTab === "Activity" && styles.activeTab]}
+            onPress={() => setActiveTab("Activity")}
           >
-            <Text style={activeTab === 'Activity' ? styles.activeTabText : styles.tabText}>Activity</Text>
+            <Text
+              style={
+                activeTab === "Activity" ? styles.activeTabText : styles.tabText
+              }
+            >
+              Activity
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tabItem, activeTab === 'Friends' ? styles.activeTab : null]}
-            onPress={() => setActiveTab('Friends')}
+          <TouchableOpacity
+            style={[styles.tabItem, activeTab === "Friends" && styles.activeTab]}
+            onPress={() => setActiveTab("Friends")}
           >
-            <Text style={activeTab === 'Friends' ? styles.activeTabText : styles.tabText}>Friends</Text>
+            <Text
+              style={
+                activeTab === "Friends" ? styles.activeTabText : styles.tabText
+              }
+            >
+              Friends
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tabItem, activeTab === 'Achievements' ? styles.activeTab : null]}
-            onPress={() => setActiveTab('Achievements')}
+          <TouchableOpacity
+            style={[
+              styles.tabItem,
+              activeTab === "Achievements" && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab("Achievements")}
           >
-            <Text style={activeTab === 'Achievements' ? styles.activeTabText : styles.tabText}>Achievements</Text>
+            <Text
+              style={
+                activeTab === "Achievements"
+                  ? styles.activeTabText
+                  : styles.tabText
+              }
+            >
+              Achievements
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
+      {activeTab === "Activity" && renderActivityTab()}
+      {activeTab === "Friends" && renderFriendsTab()}
+      {activeTab === "Achievements" && renderAchievementsTab()}
 
-      {/* CONTENT BASED ON ACTIVE TAB */}
-      {activeTab === 'Activity' && renderActivityTab()}
-      {activeTab === 'Friends' && renderFriendsTab()}
-      {activeTab === 'Achievements' && renderAchievementsTab()}
-
-      {/* OVAL BOTTOM NAV */}
       <View style={styles.bottomNav}>
         <TouchableOpacity onPress={() => router.push("/tabs/Home")}>
           <Image
@@ -313,7 +477,7 @@ export default function ProfileScreen() {
   );
 }
 
-/* ------------------ STYLES ------------------ */
+// -------------- STYLES --------------
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
@@ -415,7 +579,6 @@ const styles = StyleSheet.create({
     color: "#4A60FF",
     fontWeight: "600",
   },
-
   friendsContainer: {
     paddingHorizontal: 20,
     paddingBottom: 120,
@@ -435,6 +598,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     marginBottom: 10,
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -476,8 +640,6 @@ const styles = StyleSheet.create({
     height: 20,
     resizeMode: "contain",
   },
-  
-  // Achievement specific styles
   achievementIconContainer: {
     width: 40,
     height: 40,
@@ -490,8 +652,6 @@ const styles = StyleSheet.create({
   achievementIcon: {
     fontSize: 20,
   },
-  
-  // Activity specific styles
   trendIndicator: {
     width: 24,
     height: 24,
@@ -515,7 +675,19 @@ const styles = StyleSheet.create({
   medalEmoji: {
     fontSize: 20,
   },
-
+  updateActivityButton: {
+    backgroundColor: "#4A60FF",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    marginHorizontal: 20,
+    alignItems: "center",
+  },
+  updateActivityButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   bottomNav: {
     position: "absolute",
     bottom: 20,
@@ -527,6 +699,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "center",
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -550,7 +723,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 22,
     height: 22,
-    resizeMode: "contain",
     tintColor: "#fff",
     left: 13,
     top: 13,

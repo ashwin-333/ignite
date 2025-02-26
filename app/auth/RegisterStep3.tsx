@@ -36,9 +36,14 @@ export default function RegisterStep3() {
     const user = auth.currentUser;
     if (!user) return;
 
-    const userHabitsRef = collection(db, "users", user.uid, "habits");
-
     try {
+      await setDoc(
+        doc(db, "users", user.uid),
+        { userPoints: 0 },
+        { merge: true }
+      );
+
+      const userHabitsRef = collection(db, "users", user.uid, "habits");
       const savePromises = selectedHabits.map(async (habitName) => {
         const habit = habits.find((h) => h.name === habitName);
         if (!habit) return;
@@ -46,11 +51,11 @@ export default function RegisterStep3() {
         const newHabitDoc = {
           name: habit.name,
           icon: habit.icon,
-          iconName: habit.name,       
-          color: "#90EE90",          
-          colorName: "Light Green",     
+          iconName: habit.name, 
+          color: "#90EE90",
+          colorName: "Light Green",
           goal: habit.goal,
-          timesDone: 0,            
+          timesDone: 0,
         };
 
         await setDoc(doc(userHabitsRef), newHabitDoc);

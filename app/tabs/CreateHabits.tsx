@@ -25,6 +25,8 @@ export default function CreateHabit() {
 
   const [frequencyCount, setFrequencyCount] = useState(1);
 
+  const [habitPoints, setHabitPoints] = useState("");
+
   const icons = [
     { icon: "💧", name: "Water" },
     { icon: "🏃", name: "Running" },
@@ -62,6 +64,7 @@ export default function CreateHabit() {
           colorName: selectedColor.name,
           goal: habitGoal,
           timesDone: 0,
+          habitPoints: parseInt(habitPoints, 10) || 0,
         });
         console.log("Habit added successfully!");
         router.push("/tabs/Home");
@@ -76,23 +79,16 @@ export default function CreateHabit() {
 
   return (
     <SafeAreaView style={styles.screenContainer}>
-      {/* TOP WHITE HEADER */}
       <View style={styles.topHeader}>
-        {/* Back Button */}
         <TouchableOpacity 
           onPress={() => router.push("/tabs/Home")} 
           style={styles.backButton}
         >
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
-
-        {/* Page Title */}
         <Text style={styles.pageTitle}>Create Custom Habit</Text>
       </View>
-
-      {/* MAIN CONTENT SCROLLVIEW */}
       <ScrollView style={styles.contentContainer} bounces={false}>
-        {/* NAME Input */}
         <Text style={styles.label}>NAME</Text>
         <TextInput 
           style={styles.input} 
@@ -101,8 +97,6 @@ export default function CreateHabit() {
           placeholder="Enter habit name"
           placeholderTextColor="#666"
         />
-
-        {/* GOAL Input */}
         <Text style={styles.label}>GOAL</Text>
         <TextInput 
           style={styles.input} 
@@ -111,8 +105,6 @@ export default function CreateHabit() {
           placeholder="Enter goal (e.g., 2000 ML, 10000 steps)"
           placeholderTextColor="#666"
         />
-
-        {/* ICON AND COLOR */}
         <Text style={styles.label}>ICON AND COLOR</Text>
         <View style={styles.selectionRow}>
           <TouchableOpacity 
@@ -137,11 +129,8 @@ export default function CreateHabit() {
             </View>
           </TouchableOpacity>
         </View>
-
-        {/* FREQUENCY */}
         <Text style={styles.label}>FREQUENCY</Text>
         <View style={styles.frequencyContainer}>
-          {/* Arrows + count */}
           <View style={styles.frequencyCountContainer}>
             <Text style={styles.frequencyCount}>{frequencyCount} times</Text>
             <View style={styles.arrowContainer}>
@@ -153,8 +142,6 @@ export default function CreateHabit() {
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* Frequency Options (Static for now) */}
           <View style={styles.frequencyOptions}>
             <TouchableOpacity style={[styles.frequencyButton, styles.frequencyButtonSelected]}>
               <Text style={styles.frequencyButtonTextActive}>Daily</Text>
@@ -167,14 +154,19 @@ export default function CreateHabit() {
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* ADD HABIT BUTTON */}
+        <Text style={styles.label}>POINTS</Text>
+        <TextInput
+          style={styles.input}
+          value={habitPoints}
+          onChangeText={setHabitPoints}
+          placeholder="Enter points (e.g., 10)"
+          placeholderTextColor="#666"
+          keyboardType="numeric"
+        />
         <TouchableOpacity style={styles.addButton} onPress={saveHabitToFirebase}>
           <Text style={styles.addButtonText}>Add Habit</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* ICON PICKER MODAL */}
       <Modal
         visible={showIconPicker}
         transparent={true}
@@ -209,8 +201,6 @@ export default function CreateHabit() {
           </View>
         </View>
       </Modal>
-
-      {/* COLOR PICKER MODAL */}
       <Modal
         visible={showColorPicker}
         transparent={true}

@@ -18,6 +18,7 @@ import {
   arrayUnion,
   increment,
 } from "firebase/firestore";
+import { Snackbar, Button } from "@react-native-material/core";
 
 interface Habit {
   id: string;
@@ -26,12 +27,21 @@ interface Habit {
   goal: string;
   timesDone?: number;
   doneDates?: string[];
+  habitPoints?: number;
 }
 
 export default function HomeScreen() {
   const router = useRouter();
+
   const [firstName, setFirstName] = useState("");
   const [habits, setHabits] = useState<Habit[]>([]);
+
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState({
+    text: "",
+    color: "",
+    isError: false,
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -57,17 +67,33 @@ export default function HomeScreen() {
     fetchUserData();
   }, []);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showSnackbar) {
+      timer = setTimeout(() => {
+        setShowSnackbar(false);
+      }, 2000);
+    }
+    return () => clearTimeout(timer);
+  }, [showSnackbar]);
+
   const handleCompleteHabit = async (habit: Habit) => {
     const user = auth.currentUser;
     if (!user) return;
 
     try {
       const habitRef = doc(db, "users", user.uid, "habits", habit.id);
-
       await updateDoc(habitRef, {
         timesDone: increment(1),
         doneDates: arrayUnion(new Date().toISOString()),
       });
+
+      if (habit.habitPoints) {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, {
+          userPoints: increment(habit.habitPoints),
+        });
+      }
 
       setHabits((prev) =>
         prev.map((h) => {
@@ -85,13 +111,31 @@ export default function HomeScreen() {
           return h;
         })
       );
+
+      setSnackbarMessage({
+        text: `Completed "${habit.name}" ${
+          (habit.timesDone || 0) + 1
+        } times!`,
+        color: "#4A60FF",
+        isError: false,
+      });
+      setShowSnackbar(true);
+
     } catch (error) {
       console.error("Error completing habit:", error);
+
+      setSnackbarMessage({
+        text: "Failed to complete habit",
+        color: "#ff4a4a",
+        isError: true,
+      });
+      setShowSnackbar(true);
     }
   };
 
   return (
     <View style={styles.screenContainer}>
+      {/* Top Container */}
       <View style={styles.topContainer}>
         <Text style={styles.greeting}>
           Hi, {firstName || "User"} <Text style={{ fontSize: 24 }}>👋</Text>
@@ -113,10 +157,9 @@ export default function HomeScreen() {
                 <Text style={styles.habitGoal}>{habit.goal}</Text>
               </View>
             </View>
-
             <View style={{ flexDirection: "row" }}>
               <TouchableOpacity
-                style={styles.checkWrapper}
+                style={styles.calendarWrapper}
                 onPress={() =>
                   router.push({
                     pathname: "/tabs/HeatMap",
@@ -127,7 +170,7 @@ export default function HomeScreen() {
                   })
                 }
               >
-                <Text style={styles.checkText}>✔</Text>
+                <Text style={styles.calendarText}>📆</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -181,10 +224,33 @@ export default function HomeScreen() {
           />
         </TouchableOpacity>
       </View>
+
+      {showSnackbar && (
+        <Snackbar
+          message={snackbarMessage.text}
+          action={
+            <Button
+              variant="text"
+              title="Dismiss"
+              color="white"
+              compact
+              onPress={() => setShowSnackbar(false)}
+            />
+          }
+          style={{
+            backgroundColor: snackbarMessage.color,
+            position: "absolute",
+            start: 16,
+            end: 16,
+            bottom: 16,
+          }}
+        />
+      )}
     </View>
   );
 }
 
+/* ----------- STYLES ----------- */
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
@@ -226,6 +292,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     marginBottom: 12,
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -248,20 +315,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#777",
   },
-  checkWrapper: {
+  calendarWrapper: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#E7F9EE",
+    backgroundColor: "#EBF2FF",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#C3ECC8",
+    borderColor: "#ADC6FF",
   },
-  checkText: {
+  calendarText: {
     fontSize: 16,
-    color: "green",
-    fontWeight: "bold",
   },
   completeButton: {
     backgroundColor: "#4A60FF",
@@ -287,6 +352,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "center",
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
