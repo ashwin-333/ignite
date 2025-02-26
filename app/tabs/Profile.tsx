@@ -24,6 +24,23 @@ interface Friend {
   profilePicture?: string;
 }
 
+interface Achievement {
+  id: string;
+  title: string;
+  date: string;
+  icon: string;
+}
+
+interface ActivityItem {
+  id: string;
+  type: 'points' | 'challenge' | 'streak';
+  points?: number;
+  description: string;
+  date: string;
+  timestamp: string;
+  trend?: 'up' | 'down' | 'neutral';
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
 
@@ -31,6 +48,19 @@ export default function ProfileScreen() {
   const [lastName, setLastName] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [activeTab, setActiveTab] = useState<'Activity' | 'Friends' | 'Achievements'>('Friends');
+  const [achievements, setAchievements] = useState<Achievement[]>([
+    { id: '1', title: 'Best Runner!', date: '1 months ago', icon: '🏃' },
+    { id: '2', title: 'Best of the month!', date: '2 days ago', icon: '🏆' }
+  ]);
+  const [activityItems, setActivityItems] = useState<ActivityItem[]>([
+    { id: '1', type: 'points', points: 112, description: 'points earned!', date: 'Today', timestamp: '12:34 PM', trend: 'up' },
+    { id: '2', type: 'points', points: 62, description: 'points earned!', date: 'Today', timestamp: '07:12 AM', trend: 'up' },
+    { id: '3', type: 'challenge', description: 'Challenge completed!', date: 'Yesterday', timestamp: '14:12 PM', trend: 'neutral' },
+    { id: '4', type: 'streak', description: 'Weekly winning streak is broken!', date: '12 Jun', timestamp: '16:14 PM', trend: 'down' },
+    { id: '5', type: 'points', points: 96, description: 'points earned!', date: '11 Jun', timestamp: '17:45 PM', trend: 'up' },
+    { id: '6', type: 'points', points: 110, description: 'points earned!', date: '10 Jun', timestamp: '18:32 PM', trend: 'up' }
+  ]);
 
   // 1) Fetch current user's profile info
   useEffect(() => {
@@ -87,6 +117,96 @@ export default function ProfileScreen() {
 
   const displayName = `${firstName} ${lastName}`.trim() || "User";
 
+  const renderActivityTab = () => (
+    <ScrollView contentContainerStyle={styles.friendsContainer}>
+      <Text style={styles.friendsTitle}>Showing last month activity</Text>
+      {activityItems.map((item) => (
+        <View key={item.id} style={styles.friendCard}>
+          <View style={styles.friendInfo}>
+            <View>
+              <Text style={styles.friendName}>
+                {item.type === 'points' ? `${item.points} ${item.description}` : item.description}
+              </Text>
+              <Text style={styles.friendPoints}>{item.date}, {item.timestamp}</Text>
+            </View>
+          </View>
+          {item.trend === 'up' && (
+            <View style={styles.trendIndicator}>
+              <Text style={styles.upTrend}>↑</Text>
+            </View>
+          )}
+          {item.trend === 'down' && (
+            <View style={styles.trendIndicator}>
+              <Text style={styles.downTrend}>↓</Text>
+            </View>
+          )}
+          {item.trend === 'neutral' && (
+            <View style={styles.medalContainer}>
+              <Text style={styles.medalEmoji}>🏅</Text>
+            </View>
+          )}
+        </View>
+      ))}
+    </ScrollView>
+  );
+
+  const renderFriendsTab = () => (
+    <ScrollView contentContainerStyle={styles.friendsContainer}>
+      <Text style={styles.friendsTitle}>{friends.length} Friends</Text>
+      {friends.map((friend) => {
+        const friendDisplayName = `${friend.firstName} ${friend.lastName}`.trim();
+        return (
+          <View key={friend.friendId} style={styles.friendCard}>
+            <View style={styles.friendInfo}>
+              <Image
+                source={
+                  friend.profilePicture
+                    ? { uri: friend.profilePicture }
+                    : require("../../assets/images/profile-avatar.svg")
+                }
+                style={styles.friendAvatar}
+              />
+              <View>
+                <Text style={styles.friendName}>
+                  {friendDisplayName || "Unknown"}
+                </Text>
+                <Text style={styles.friendPoints}>912 Points</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.trashButtonBox}
+              onPress={() => handleRemoveFriend(friend.friendId)}
+            >
+              <Image
+                source={require("../../assets/images/trash.svg")}
+                style={styles.trashIcon}
+              />
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+    </ScrollView>
+  );
+
+  const renderAchievementsTab = () => (
+    <ScrollView contentContainerStyle={styles.friendsContainer}>
+      <Text style={styles.friendsTitle}>{achievements.length} Achievements</Text>
+      {achievements.map((achievement) => (
+        <View key={achievement.id} style={styles.friendCard}>
+          <View style={styles.friendInfo}>
+            <View style={styles.achievementIconContainer}>
+              <Text style={styles.achievementIcon}>{achievement.icon}</Text>
+            </View>
+            <View>
+              <Text style={styles.friendName}>{achievement.title}</Text>
+              <Text style={styles.friendPoints}>{achievement.date}</Text>
+            </View>
+          </View>
+        </View>
+      ))}
+    </ScrollView>
+  );
+
   return (
     <View style={styles.screenContainer}>
       {/* TOP CONTAINER */}
@@ -96,7 +216,7 @@ export default function ProfileScreen() {
           <Text style={styles.headerTitle}>Your Profile</Text>
           <TouchableOpacity
             style={styles.logoutButtonBox}
-            onPress={() => router.push("/")} // route to root
+            onPress={() => router.push("/")}
           >
             <Image
               source={require("../../assets/images/logout.svg")}
@@ -126,56 +246,31 @@ export default function ProfileScreen() {
 
         {/* Tabs */}
         <View style={styles.tabPill}>
-          <TouchableOpacity style={styles.tabItem}>
-            <Text style={styles.tabText}>Activity</Text>
+          <TouchableOpacity 
+            style={[styles.tabItem, activeTab === 'Activity' ? styles.activeTab : null]}
+            onPress={() => setActiveTab('Activity')}
+          >
+            <Text style={activeTab === 'Activity' ? styles.activeTabText : styles.tabText}>Activity</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.tabItem, styles.activeTab]}>
-            <Text style={styles.activeTabText}>Friends</Text>
+          <TouchableOpacity 
+            style={[styles.tabItem, activeTab === 'Friends' ? styles.activeTab : null]}
+            onPress={() => setActiveTab('Friends')}
+          >
+            <Text style={activeTab === 'Friends' ? styles.activeTabText : styles.tabText}>Friends</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.tabItem}>
-            <Text style={styles.tabText}>Achievements</Text>
+          <TouchableOpacity 
+            style={[styles.tabItem, activeTab === 'Achievements' ? styles.activeTab : null]}
+            onPress={() => setActiveTab('Achievements')}
+          >
+            <Text style={activeTab === 'Achievements' ? styles.activeTabText : styles.tabText}>Achievements</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* FRIENDS LIST */}
-      <ScrollView contentContainerStyle={styles.friendsContainer}>
-        <Text style={styles.friendsTitle}>{friends.length} Friends</Text>
-        {friends.map((friend) => {
-          const friendDisplayName = `${friend.firstName} ${friend.lastName}`.trim();
-          return (
-            <View key={friend.friendId} style={styles.friendCard}>
-              <View style={styles.friendInfo}>
-                <Image
-                  source={
-                    friend.profilePicture
-                      ? { uri: friend.profilePicture }
-                      : require("../../assets/images/profile-avatar.svg")
-                  }
-                  style={styles.friendAvatar}
-                />
-                <View>
-                  <Text style={styles.friendName}>
-                    {friendDisplayName || "Unknown"}
-                  </Text>
-                  {/* Static points for now */}
-                  <Text style={styles.friendPoints}>912 Points</Text>
-                </View>
-              </View>
-              {/* Trash button => remove friend mutually */}
-              <TouchableOpacity
-                style={styles.trashButtonBox}
-                onPress={() => handleRemoveFriend(friend.friendId)}
-              >
-                <Image
-                  source={require("../../assets/images/trash.svg")}
-                  style={styles.trashIcon}
-                />
-              </TouchableOpacity>
-            </View>
-          );
-        })}
-      </ScrollView>
+      {/* CONTENT BASED ON ACTIVE TAB */}
+      {activeTab === 'Activity' && renderActivityTab()}
+      {activeTab === 'Friends' && renderFriendsTab()}
+      {activeTab === 'Achievements' && renderAchievementsTab()}
 
       {/* OVAL BOTTOM NAV */}
       <View style={styles.bottomNav}>
@@ -380,6 +475,45 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     resizeMode: "contain",
+  },
+  
+  // Achievement specific styles
+  achievementIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#E6F4FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  achievementIcon: {
+    fontSize: 20,
+  },
+  
+  // Activity specific styles
+  trendIndicator: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  upTrend: {
+    fontSize: 20,
+    color: "#4CAF50",
+  },
+  downTrend: {
+    fontSize: 20,
+    color: "#F44336",
+  },
+  medalContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  medalEmoji: {
+    fontSize: 20,
   },
 
   bottomNav: {
