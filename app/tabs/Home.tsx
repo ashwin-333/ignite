@@ -35,6 +35,12 @@ export default function HomeScreen() {
 
   const [firstName, setFirstName] = useState("");
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState({
+    text: '',
+    color: '',
+    isError: false,
+  });
 
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState({
