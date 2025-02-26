@@ -9,13 +9,23 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  updateDoc,
+  arrayUnion,
+  increment,
+} from "firebase/firestore";
 
 interface Habit {
   id: string;
   name: string;
   icon: string;
   goal: string;
+  timesDone?: number;
+  doneDates?: string[];
 }
 
 export default function HomeScreen() {
@@ -35,15 +45,50 @@ export default function HomeScreen() {
 
         const habitsRef = collection(db, "users", user.uid, "habits");
         const habitsSnapshot = await getDocs(habitsRef);
+
         const userHabits = habitsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Habit[];
+
         setHabits(userHabits);
       }
     };
     fetchUserData();
   }, []);
+
+  const handleCompleteHabit = async (habit: Habit) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      const habitRef = doc(db, "users", user.uid, "habits", habit.id);
+
+      await updateDoc(habitRef, {
+        timesDone: increment(1),
+        doneDates: arrayUnion(new Date().toISOString()),
+      });
+
+      setHabits((prev) =>
+        prev.map((h) => {
+          if (h.id === habit.id) {
+            const updatedTimesDone = (h.timesDone || 0) + 1;
+            const updatedDates = h.doneDates
+              ? [...h.doneDates, new Date().toISOString()]
+              : [new Date().toISOString()];
+            return {
+              ...h,
+              timesDone: updatedTimesDone,
+              doneDates: updatedDates,
+            };
+          }
+          return h;
+        })
+      );
+    } catch (error) {
+      console.error("Error completing habit:", error);
+    }
+  };
 
   return (
     <View style={styles.screenContainer}>
@@ -69,20 +114,29 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.checkWrapper}
-              onPress={() =>
-                router.push({
-                  pathname: "/tabs/HeatMap",
-                  params: {
-                    habitName: habit.name,
-                    details: habit.goal,
-                  },
-                })
-              }
-            >
-              <Text style={styles.checkText}>✔</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row" }}>
+              <TouchableOpacity
+                style={styles.checkWrapper}
+                onPress={() =>
+                  router.push({
+                    pathname: "/tabs/HeatMap",
+                    params: {
+                      habitName: habit.name,
+                      details: habit.goal,
+                    },
+                  })
+                }
+              >
+                <Text style={styles.checkText}>✔</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.completeButton, { marginLeft: 8 }]}
+                onPress={() => handleCompleteHabit(habit)}
+              >
+                <Text style={styles.completeButtonText}>Complete</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -208,6 +262,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "green",
     fontWeight: "bold",
+  },
+  completeButton: {
+    backgroundColor: "#4A60FF",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  completeButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   bottomNav: {
     position: "absolute",

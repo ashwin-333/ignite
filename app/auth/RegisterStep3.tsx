@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
 import { collection, doc, setDoc } from "firebase/firestore";
@@ -17,9 +24,11 @@ export default function RegisterStep3() {
   const router = useRouter();
   const [selectedHabits, setSelectedHabits] = useState<string[]>([]);
 
-  const toggleHabit = (habit: string) => {
+  const toggleHabit = (habitName: string) => {
     setSelectedHabits((prev) =>
-      prev.includes(habit) ? prev.filter((h) => h !== habit) : [...prev, habit]
+      prev.includes(habitName)
+        ? prev.filter((h) => h !== habitName)
+        : [...prev, habitName]
     );
   };
 
@@ -29,20 +38,32 @@ export default function RegisterStep3() {
 
     const userHabitsRef = collection(db, "users", user.uid, "habits");
 
-    const savePromises = selectedHabits.map(async (habitName) => {
-      const habit = habits.find((h) => h.name === habitName);
-      if (!habit) return;
+    try {
+      const savePromises = selectedHabits.map(async (habitName) => {
+        const habit = habits.find((h) => h.name === habitName);
+        if (!habit) return;
 
-      await setDoc(doc(userHabitsRef), {
-        name: habit.name,
-        icon: habit.icon,
-        goal: habit.goal,
+        const newHabitDoc = {
+          name: habit.name,
+          icon: habit.icon,
+          iconName: habit.name,       
+          color: "#90EE90",          
+          colorName: "Light Green",     
+          goal: habit.goal,
+          timesDone: 0,            
+        };
+
+        await setDoc(doc(userHabitsRef), newHabitDoc);
       });
-    });
 
-    await Promise.all(savePromises);
+      await Promise.all(savePromises);
 
-    router.push("/tabs/Home");
+      Alert.alert("Success", "Habits added successfully!");
+      router.push("/tabs/Home");
+    } catch (error: any) {
+      console.error("Error saving habits:", error);
+      Alert.alert("Error", error.message);
+    }
   };
 
   return (
@@ -98,7 +119,12 @@ const styles = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: 20, marginTop: 20 },
   title: { fontSize: 18, fontWeight: "bold", textAlign: "center" },
   subtitle: { fontSize: 14, color: "#666", textAlign: "center", marginBottom: 20 },
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", paddingBottom: 20 },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    paddingBottom: 20,
+  },
   habitBox: {
     width: "45%",
     margin: "2.5%",
@@ -107,19 +133,36 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+
     borderWidth: 1,
     borderColor: "#E0E0E0",
     padding: 10,
   },
-  selected: { borderColor: "#7948FF", borderWidth: 2 },
-  habitEmoji: { fontSize: 32, marginBottom: 6 },
-  habitName: { fontSize: 14, fontWeight: "500", textAlign: "center", marginBottom: 4 },
-  habitGoal: { fontSize: 12, color: "#666", textAlign: "center" },
+  selected: {
+    borderColor: "#7948FF",
+    borderWidth: 2,
+  },
+  habitEmoji: {
+    fontSize: 32,
+    marginBottom: 6,
+  },
+  habitName: {
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  habitGoal: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+  },
   finishButton: {
     backgroundColor: "#000",
     paddingVertical: 15,

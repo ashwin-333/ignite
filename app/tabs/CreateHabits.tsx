@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
-  TextInput, 
-  SafeAreaView, 
-  Modal, 
-  ScrollView 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  SafeAreaView,
+  Modal,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
@@ -61,6 +61,7 @@ export default function CreateHabit() {
           color: selectedColor.color,
           colorName: selectedColor.name,
           goal: habitGoal,
+          timesDone: 0,
         });
         console.log("Habit added successfully!");
         router.push("/tabs/Home");
@@ -71,8 +72,7 @@ export default function CreateHabit() {
   };
 
   const incrementFrequency = () => setFrequencyCount((prev) => prev + 1);
-  const decrementFrequency = () =>
-    setFrequencyCount((prev) => (prev > 1 ? prev - 1 : 1));
+  const decrementFrequency = () => setFrequencyCount((prev) => (prev > 1 ? prev - 1 : 1));
 
   return (
     <SafeAreaView style={styles.screenContainer}>
@@ -85,6 +85,7 @@ export default function CreateHabit() {
         >
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
+
         {/* Page Title */}
         <Text style={styles.pageTitle}>Create Custom Habit</Text>
       </View>
@@ -153,7 +154,7 @@ export default function CreateHabit() {
             </View>
           </View>
 
-          {/* Frequency Options */}
+          {/* Frequency Options (Static for now) */}
           <View style={styles.frequencyOptions}>
             <TouchableOpacity style={[styles.frequencyButton, styles.frequencyButtonSelected]}>
               <Text style={styles.frequencyButtonTextActive}>Daily</Text>
@@ -252,7 +253,7 @@ export default function CreateHabit() {
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    backgroundColor: "#F5F7FE",
+    backgroundColor: "#F5F7FE", 
   },
   topHeader: {
     backgroundColor: "#fff",
