@@ -36,7 +36,6 @@ function BackButtonSvg({ width = 60, height = 60 }) {
   );
 }
 
-
 const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -45,8 +44,7 @@ const MAX_WEEKS = 5;
 
 function buildCalendarMatrix(year: number, monthIndex: number) {
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, monthIndex, 1).getDay(); 
-
+  const firstDayOfWeek = new Date(year, monthIndex, 1).getDay(); // Sunday=0
 
   const matrix = Array.from({ length: 7 }, () => Array(MAX_WEEKS).fill(null));
 
@@ -64,8 +62,9 @@ function buildCalendarMatrix(year: number, monthIndex: number) {
 interface HabitDoc {
   name: string;
   goal?: string;
-  doneDates?: string[]; // stored ISO strings
-  timesDone?: number;
+  color?: string; 
+  doneDates?: string[];
+  timesDone?: number;  
 }
 
 export default function HeatMapScreen() {
@@ -77,7 +76,6 @@ export default function HeatMapScreen() {
 
   const [longestStreak, setLongestStreak] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
-
 
   const [dayCounts, setDayCounts] = useState<Record<string, number>>({});
 
@@ -94,36 +92,30 @@ export default function HeatMapScreen() {
         return;
       }
 
-
       const habitsRef = collection(db, "users", user.uid, "habits");
       const querySnapshot = await getDocs(habitsRef);
 
-      let habitDocId: string | null = null;
       let docData: any = null;
 
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
         if (data.name === habitName) {
-          habitDocId = docSnap.id;
           docData = data;
         }
       });
 
-      if (!habitDocId || !docData) {
+      if (!docData) {
         Alert.alert("Not Found", "Habit document not found");
         return;
       }
 
-      // Store in state
       setHabitData(docData);
-
 
       if (docData.doneDates && Array.isArray(docData.doneDates)) {
         const newDayCounts: Record<string, number> = {};
 
         docData.doneDates.forEach((isoString: string) => {
           const dateObj = new Date(isoString);
-
           const year = dateObj.getFullYear();
           const month = String(dateObj.getMonth() + 1).padStart(2, "0");
           const day = String(dateObj.getDate()).padStart(2, "0");
@@ -136,7 +128,6 @@ export default function HeatMapScreen() {
         });
 
         setDayCounts(newDayCounts);
-
 
         computeStreaks(Object.keys(newDayCounts));
       }
@@ -154,15 +145,14 @@ export default function HeatMapScreen() {
     }
 
     const sortedDays = dayKeys.slice().sort();
-
     let maxStreak = 1;
     let currStreak = 1;
 
     for (let i = 1; i < sortedDays.length; i++) {
       const prevDate = new Date(sortedDays[i - 1]);
       const currDate = new Date(sortedDays[i]);
-      const diffInMs = currDate.getTime() - prevDate.getTime();
-      const diffInDays = diffInMs / (1000 * 3600 * 24);
+      const diffInDays =
+        (currDate.getTime() - prevDate.getTime()) / (1000 * 3600 * 24);
 
       if (diffInDays === 1) {
         currStreak++;
@@ -201,7 +191,6 @@ export default function HeatMapScreen() {
 
       await deleteDoc(doc(db, "users", user.uid, "habits", habitToDelete));
       Alert.alert("Success", "Habit deleted successfully");
-
       router.push("/tabs/Home");
     } catch (error: any) {
       console.error("Deletion Error:", error);
@@ -216,58 +205,73 @@ export default function HeatMapScreen() {
       return (
         <View key={monthIndex} style={styles.monthWrapper}>
           <Text style={styles.monthTitle}>{monthName}</Text>
-          {matrix.map((weekArray, rowIndex) => {
-            return (
-              <View style={styles.dayRow} key={rowIndex}>
-                {weekArray.map((dayNum, colIndex) => {
-                  if (!dayNum) {
-                    // out of month
-                    return (
-                      <View
-                        key={colIndex}
-                        style={[styles.square, styles.outOfMonthSquare]}
-                      />
-                    );
-                  }
-
-                  const dateKey = `${currentYear}-${String(
-                    monthIndex + 1
-                  ).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-
-                  const count = dayCounts[dateKey] || 0;
-                  const squareStyle = getSquareStyle(count);
-
+          {matrix.map((weekArray, rowIndex) => (
+            <View style={styles.dayRow} key={rowIndex}>
+              {weekArray.map((dayNum, colIndex) => {
+                if (!dayNum) {
                   return (
                     <View
                       key={colIndex}
-                      style={[styles.square, squareStyle]}
+                      style={[styles.square, styles.outOfMonthSquare]}
                     />
                   );
-                })}
-              </View>
-            );
-          })}
+                }
+
+                const dateKey = `${currentYear}-${String(
+                  monthIndex + 1
+                ).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+
+                const count = dayCounts[dateKey] || 0;
+                const squareStyle = getSquareStyle(count);
+
+                return (
+                  <View key={colIndex} style={[styles.square, squareStyle]} />
+                );
+              })}
+            </View>
+          ))}
         </View>
       );
     });
   };
 
-
   const getSquareStyle = (count: number) => {
     if (count === 0) {
-      return { backgroundColor: "#E0E0E0" }; // gray
-    } else if (count === 1) {
-      return { backgroundColor: "#C5ECB2" }; // light green
-    } else if (count === 2) {
-      return { backgroundColor: "#9CD473" }; // medium green
-    } else if (count === 3) {
-      return { backgroundColor: "#73BC2F" }; // darker green
-    } else {
-      return { backgroundColor: "#4A9B1F" }; // even darker
+      return { backgroundColor: "#E0E0E0" };
     }
+
+    const baseColor = habitData?.color || "#90EE90";
+
+
+    const shadeIndex = Math.min(count, 5) - 1; // 0..4
+    return { backgroundColor: darkenColor(baseColor, shadeIndex) };
   };
 
-  // 6) Year navigation
+
+  function darkenColor(hexColor: string, shadeIndex: number) {
+
+
+    if (shadeIndex <= 0) return hexColor;
+
+    const r = parseInt(hexColor.substring(1, 3), 16);
+    const g = parseInt(hexColor.substring(3, 5), 16);
+    const b = parseInt(hexColor.substring(5, 7), 16);
+
+
+    const maxDarkFactor = 0.4;
+    const darkFactor = (shadeIndex / 4) * maxDarkFactor; 
+
+    const newR = Math.floor(r * (1 - darkFactor));
+    const newG = Math.floor(g * (1 - darkFactor));
+    const newB = Math.floor(b * (1 - darkFactor));
+
+    const rr = newR.toString(16).padStart(2, "0");
+    const gg = newG.toString(16).padStart(2, "0");
+    const bb = newB.toString(16).padStart(2, "0");
+
+    return `#${rr}${gg}${bb}`;
+  }
+
   const REAL_CURRENT_YEAR = new Date().getFullYear();
   const handlePrevYear = () => setCurrentYear((y) => y - 1);
   const handleNextYear = () => {
@@ -311,7 +315,7 @@ export default function HeatMapScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* The horizontal months scroll */}
+        {/* Heatmap */}
         <View style={styles.heatmapContainer}>
           <ScrollView
             horizontal
@@ -424,7 +428,6 @@ const styles = StyleSheet.create({
   square: {
     width: 16,
     height: 16,
-    backgroundColor: "#E0E0E0",
     marginRight: 3,
     borderRadius: 2,
   },
