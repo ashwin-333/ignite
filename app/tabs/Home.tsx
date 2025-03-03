@@ -41,14 +41,6 @@ export default function HomeScreen() {
     color: '',
     isError: false,
   });
-
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState({
-    text: "",
-    color: "",
-    isError: false,
-  });
-
   useEffect(() => {
     const fetchUserData = async () => {
       const user = auth.currentUser;
@@ -119,9 +111,8 @@ export default function HomeScreen() {
       );
 
       setSnackbarMessage({
-        text: `Completed "${habit.name}" ${
-          (habit.timesDone || 0) + 1
-        } times!`,
+        text: `Completed "${habit.name}" ${(habit.timesDone || 0) + 1
+          } times!`,
         color: "#4A60FF",
         isError: false,
       });
