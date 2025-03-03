@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,10 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { auth, db } from "../firebaseConfig";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
-/* ---------- Sample Data (no more "(W)" or "(M)" suffix) ---------- */
+/* ---------- Sample Data (no more "(W)" or "(M)" suffix) ---------- 
 const dailyData = [
   { rank: 1, name: "Tejas", points: 1452 },
   { rank: 2, name: "Suhas", points: 1223 },
@@ -33,10 +35,70 @@ const monthlyData = [
   { rank: 5, name: "Neo", points: 2400 },
 ];
 
+*/
+
 /* ------------- Leaderboard Screen ------------- */
 export default function Leaderboards() {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<"Daily" | "Weekly" | "Monthly">("Daily");
+  const [dailyData, setDailyData] = useState<Array<{ rank: number; name: string; points: number }>>([]);
+  const [weeklyData, setWeeklyData] = useState<Array<{ rank: number; name: string; points: number }>>([]);
+  const [monthlyData, setMonthlyData] = useState<Array<{ rank: number; name: string; points: number }>>([]);
+
+  useEffect(() => {
+    fetchLeaderboardData();
+  }, []);
+
+  const fetchLeaderboardData = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      // Get current user's friends
+      const friendsRef = collection(db, "users", user.uid, "friends");
+      const friendsSnapshot = await getDocs(friendsRef);
+      
+      // Get points data for friends and current user
+      const pointsPromises = [
+        // Include current user
+        getDoc(doc(db, "users", user.uid)).then(doc => ({
+          id: user.uid,
+          name: doc.data()?.firstName || "User",
+          points: doc.data()?.userPoints || 0
+        })),
+        // Get friends' data
+        ...friendsSnapshot.docs.map(async (friendDoc) => {
+          const friendId = friendDoc.id;
+          const userDoc = await getDoc(doc(db, "users", friendId));
+          return {
+            id: friendId,
+            name: userDoc.data()?.firstName || "User",
+            points: userDoc.data()?.userPoints || 0
+          };
+        })
+      ];
+
+      const usersData = await Promise.all(pointsPromises);
+
+      // Sort by points and add ranks
+      const rankedData = usersData
+        .sort((a, b) => b.points - a.points)
+        .map((user, index) => ({
+          rank: index + 1,
+          name: user.name,
+          points: user.points
+        }));
+
+      // For now, using the same data for all time periods
+      // You can modify this later to track different time periods
+      setDailyData(rankedData);
+      setWeeklyData(rankedData);
+      setMonthlyData(rankedData);
+
+    } catch (error) {
+      console.error("Error fetching leaderboard data:", error);
+    }
+  };
 
   // Decide which data to show
   let currentData;
