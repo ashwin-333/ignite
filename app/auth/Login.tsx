@@ -52,40 +52,57 @@ export default function LoginScreen() {
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>Log In</Text>
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>Log In</Text>
 
-      <Text style={styles.label}>E-MAIL</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>E-MAIL</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            placeholderTextColor="#A1A1A1"
+          />
+        </View>
 
-      <Text style={styles.label}>PASSWORD</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>PASSWORD</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholderTextColor="#A1A1A1"
+          />
+        </View>
 
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
-        <Image source={require("../../assets/images/google.png")} style={styles.googleIcon} />
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Next</Text>
-      </TouchableOpacity>
+        <View style={styles.dividerContainer}>
+          <View style={styles.divider} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.divider} />
+        </View>
 
-      <TouchableOpacity onPress={() => router.push("/auth/RegisterStep1")}>
-        <Text style={styles.footerText}>
-          Don't have an account? <Text style={styles.footerLink}>Let's create!</Text>
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
+          <Image source={require("../../assets/images/google.png")} style={styles.googleIcon} />
+          <Text style={styles.googleButtonText}>Sign in with Google</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          onPress={() => router.push("/auth/RegisterStep1")}
+          style={styles.signupContainer}
+        >
+          <Text style={styles.footerText}>
+            Don't have an account? <Text style={styles.footerLink}>Let's create!</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -93,51 +110,87 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#fff",
     justifyContent: "center",
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   backButton: {
     position: "absolute",
     top: 50,
     left: 20,
+    zIndex: 10,
   },
   backButtonText: {
     fontSize: 24,
     color: "#000",
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 40,
     textAlign: "center",
+    color: "#1A1A1A",
+  },
+  inputContainer: {
+    marginBottom: 25,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 10,
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 10,
+    color: "#1A1A1A",
   },
   input: {
     height: 50,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: "#7948FF",
     paddingHorizontal: 10,
-    marginTop: 5,
+    fontSize: 16,
+    color: "#000",
+  },
+  button: {
+    backgroundColor: "#000",
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 20,
+    marginBottom: 25,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 30,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#A1A1A1',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#A1A1A1',
+    fontSize: 14,
   },
   googleButton: {
     backgroundColor: "transparent",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 16,
+    paddingVertical: 15,
+    borderRadius: 8,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 40,
     borderWidth: 1,
     borderColor: "#000",
-    width: "70%",
-    alignSelf: "center",
+    width: "100%",
+    marginBottom: 25,
   },
   googleIcon: {
     width: 20,
@@ -149,23 +202,12 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "bold",
   },
-  button: {
-    backgroundColor: "#000",
-    paddingVertical: 15,
-    borderRadius: 8,
+  signupContainer: {
     marginTop: 20,
-    alignItems: "center",
-    width: "85%",
-    alignSelf: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
   },
   footerText: {
     textAlign: "center",
     color: "#000",
-    marginTop: 20,
     fontSize: 14,
   },
   footerLink: {

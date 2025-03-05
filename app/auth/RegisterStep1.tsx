@@ -119,6 +119,12 @@ export default function RegisterStep1() {
         <Text style={styles.buttonText}>Next</Text>
       </TouchableOpacity>
 
+      <View style={styles.dividerContainer}>
+        <View style={styles.divider} />
+        <Text style={styles.dividerText}>or</Text>
+        <View style={styles.divider} />
+      </View>
+
       <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignUp}>
         <Image
           source={require("../../assets/images/google.png")}
@@ -180,11 +186,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 25,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#A1A1A1',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#A1A1A1',
+    fontSize: 14,
+  },
   googleButton: {
     backgroundColor: "#fff",
     paddingVertical: 15,
     borderRadius: 8,
-    marginTop: 15,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#A1A1A1",

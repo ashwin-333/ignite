@@ -275,13 +275,14 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     padding: 20,
+    paddingBottom: 0, // Remove bottom padding from ScrollView
   },
   label: {
     fontSize: 13,
     fontWeight: "bold",
     color: "#666",
     marginBottom: 6,
-    marginTop: 10,
+    marginTop: 24, // Increase top margin for better spacing
   },
   input: {
     fontSize: 16,
@@ -332,6 +333,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: "#E5E7ED",
+    marginBottom: 40, // Increase bottom margin
   },
   frequencyCountContainer: {
     flexDirection: "row",
@@ -382,13 +384,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
-    marginTop: 30,
-    marginBottom: 30,
+    marginTop: 40,
+    marginBottom: -10, // Creates hovering effect
+    marginHorizontal: 20, // Match parent padding
+    elevation: 4, // Add shadow for Android
+    shadowColor: "#000", // iOS shadow
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   addButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+    letterSpacing: 0.5,
   },
 
   modalContainer: {
