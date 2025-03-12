@@ -70,9 +70,10 @@ export default function RegisterStep1() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backButtonText}>←</Text>
-      </TouchableOpacity>
+    <TouchableOpacity onPress={() => router.push("/")} style={styles.backButton}>
+      <Text style={styles.backButtonText}>←</Text>
+    </TouchableOpacity>
+
 
       <Text style={styles.title}>Sign up</Text>
 
