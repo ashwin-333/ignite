@@ -12,38 +12,12 @@ import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
-/* ---------- Sample Data (no more "(W)" or "(M)" suffix) ---------- 
-const dailyData = [
-  { rank: 1, name: "Tejas", points: 1452 },
-  { rank: 2, name: "Suhas", points: 1223 },
-  { rank: 3, name: "Ashwin", points: 968 },
-  { rank: 4, name: "Hemanth", points: 912 },
-  { rank: 5, name: "Neo", points: 846 },
-];
-const weeklyData = [
-  { rank: 1, name: "Tejas", points: 2000 },
-  { rank: 2, name: "Suhas", points: 1823 },
-  { rank: 3, name: "Ashwin", points: 1599 },
-  { rank: 4, name: "Hemanth", points: 1204 },
-  { rank: 5, name: "Neo", points: 1020 },
-];
-const monthlyData = [
-  { rank: 1, name: "Tejas", points: 5044 },
-  { rank: 2, name: "Suhas", points: 4891 },
-  { rank: 3, name: "Ashwin", points: 4329 },
-  { rank: 4, name: "Hemanth", points: 3890 },
-  { rank: 5, name: "Neo", points: 2400 },
-];
-
-*/
-
 /* ------------- Leaderboard Screen ------------- */
 export default function Leaderboards() {
   const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState<"Daily" | "Weekly" | "Monthly">("Daily");
-  const [dailyData, setDailyData] = useState<Array<{ rank: number; name: string; points: number }>>([]);
-  const [weeklyData, setWeeklyData] = useState<Array<{ rank: number; name: string; points: number }>>([]);
-  const [monthlyData, setMonthlyData] = useState<Array<{ rank: number; name: string; points: number }>>([]);
+  const [leaderboardData, setLeaderboardData] = useState<
+    Array<{ rank: number; name: string; points: number }>
+  >([]);
 
   useEffect(() => {
     fetchLeaderboardData();
@@ -89,30 +63,14 @@ export default function Leaderboards() {
           points: user.points
         }));
 
-      // For now, using the same data for all time periods
-      // You can modify this later to track different time periods
-      setDailyData(rankedData);
-      setWeeklyData(rankedData);
-      setMonthlyData(rankedData);
+      setLeaderboardData(rankedData);
 
     } catch (error) {
       console.error("Error fetching leaderboard data:", error);
     }
   };
 
-  // Decide which data to show
-  let currentData;
-  switch (selectedTab) {
-    case "Weekly":
-      currentData = weeklyData;
-      break;
-    case "Monthly":
-      currentData = monthlyData;
-      break;
-    default:
-      currentData = dailyData;
-  }
-
+  const currentData = leaderboardData;
   const topThree = currentData.slice(0, 3);
   const others = currentData.slice(3);
 
@@ -122,61 +80,6 @@ export default function Leaderboards() {
       {/* WHITE TOP BAR, LEFT-ALIGNED TITLE */}
       <View style={styles.topBarContainer}>
         <Text style={styles.headerTitle}>Leaderboard</Text>
-
-        {/* New snippet for Daily/Weekly/Monthly */}
-        <View style={styles.frequencyOptions}>
-          <TouchableOpacity
-            style={[
-              styles.frequencyButton,
-              selectedTab === "Daily" && styles.frequencyButtonSelected,
-            ]}
-            onPress={() => setSelectedTab("Daily")}
-          >
-            <Text
-              style={
-                selectedTab === "Daily"
-                  ? styles.frequencyButtonTextActive
-                  : styles.frequencyButtonText
-              }
-            >
-              Daily
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.frequencyButton,
-              selectedTab === "Weekly" && styles.frequencyButtonSelected,
-            ]}
-            onPress={() => setSelectedTab("Weekly")}
-          >
-            <Text
-              style={
-                selectedTab === "Weekly"
-                  ? styles.frequencyButtonTextActive
-                  : styles.frequencyButtonText
-              }
-            >
-              Weekly
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.frequencyButton,
-              selectedTab === "Monthly" && styles.frequencyButtonSelected,
-            ]}
-            onPress={() => setSelectedTab("Monthly")}
-          >
-            <Text
-              style={
-                selectedTab === "Monthly"
-                  ? styles.frequencyButtonTextActive
-                  : styles.frequencyButtonText
-              }
-            >
-              Monthly
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Gradient background for main content */}
@@ -187,11 +90,10 @@ export default function Leaderboards() {
         style={styles.gradientContainer}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* TOP 3 (each with separate style so you can tweak alignment) */}
+          {/* TOP 3 */}
           <View style={styles.topThreeContainer}>
             {/* 2ND PLACE */}
             <View style={[styles.topItemWrapper, styles.secondPlacePosition]}>
-              {/* Profile pic & name above shape */}
               <Image
                 source={require("../../assets/images/Default_pfp.svg.png")}
                 style={styles.profilePic}
@@ -203,7 +105,6 @@ export default function Leaderboards() {
                 source={require("../../assets/images/2nd.svg")}
                 style={styles.rankShape}
               />
-              {/* Medal box for points */}
               <View style={styles.medalBox}>
                 <Image
                   source={require("../../assets/images/medal.svg")}
@@ -217,7 +118,6 @@ export default function Leaderboards() {
 
             {/* 1ST PLACE */}
             <View style={[styles.topItemWrapper, styles.firstPlacePosition]}>
-              {/* Crown above shape */}
               <Image
                 source={require("../../assets/images/crown.svg")}
                 style={styles.crown}
@@ -233,7 +133,6 @@ export default function Leaderboards() {
                 source={require("../../assets/images/1st.svg")}
                 style={styles.rankShape}
               />
-              {/* Medal box for points */}
               <View style={styles.medalBox}>
                 <Image
                   source={require("../../assets/images/medal.svg")}
@@ -270,7 +169,7 @@ export default function Leaderboards() {
             </View>
           </View>
 
-          {/* 4th and beyond */}
+          {/* Other Rankings */}
           <View style={styles.cardList}>
             {others.map((user) => (
               <View key={user.rank} style={styles.userCard}>
@@ -345,7 +244,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     paddingTop: 60,
     paddingBottom: 10,
-    paddingHorizontal: 20, // so text is left-aligned
+    paddingHorizontal: 20,
   },
   headerTitle: {
     fontSize: 24,
@@ -354,32 +253,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "left",
   },
-
-  /* NEW FREQUENCY STYLES */
-  frequencyOptions: {
-    flexDirection: "row",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    padding: 4,
-  },
-  frequencyButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderRadius: 6,
-  },
-  frequencyButtonSelected: {
-    backgroundColor: "#fff",
-  },
-  frequencyButtonText: {
-    color: "#666",
-    fontWeight: "500",
-  },
-  frequencyButtonTextActive: {
-    color: "#4A60FF",
-    fontWeight: "600",
-  },
-
   /* MAIN GRADIENT AREA */
   gradientContainer: {
     flex: 1,
@@ -387,31 +260,27 @@ const styles = StyleSheet.create({
   scrollContent: {
     alignItems: "center",
     paddingVertical: 20,
-    paddingBottom: 120, // space for bottom nav
+    paddingBottom: 120,
   },
   /* TOP THREE */
   topThreeContainer: {
     width: "100%",
-    height: 200, // extra space to position them
+    height: 200,
   },
-  /* Each item can be positioned differently */
   topItemWrapper: {
     position: "absolute",
     width: 90,
     height: 160,
     alignItems: "center",
   },
-  // Second place
   secondPlacePosition: {
-    left: "10%",  // tweak
-    bottom: -20,    // you can tweak these
+    left: "10%",
+    bottom: -20,
   },
-  // First place
   firstPlacePosition: {
     alignSelf: "center",
     bottom: 9,
   },
-  // Third place
   thirdPlacePosition: {
     right: "10%",
     bottom: -25,
@@ -441,7 +310,6 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     zIndex: 1,
   },
-  /* Medal box for points */
   medalBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -463,8 +331,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#FEA800",
   },
-
-  /* CARDS (4th, 5th, etc.) */
+  /* CARDS */
   cardList: {
     width: "90%",
     marginTop: 80,
@@ -502,7 +369,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
   },
-
   /* BOTTOM NAV */
   bottomNav: {
     position: "absolute",

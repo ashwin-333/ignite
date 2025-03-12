@@ -22,10 +22,8 @@ export default function CreateHabit() {
   const [selectedColor, setSelectedColor] = useState({ color: "#90EE90", name: "Light Green" });
   const [habitName, setHabitName] = useState("Drink Water");
   const [habitGoal, setHabitGoal] = useState("2000 ML");
-
-  const [frequencyCount, setFrequencyCount] = useState(1);
-
   const [habitPoints, setHabitPoints] = useState("");
+  const [pointsError, setPointsError] = useState("");
 
   const icons = [
     { icon: "💧", name: "Water" },
@@ -51,7 +49,32 @@ export default function CreateHabit() {
     { color: "#FF6B6B", name: "Coral" },
   ];
 
+  // This function only allows numeric input and limits the value to a maximum of 10.
+  const handlePointsChange = (value: string) => {
+    // Remove any non-numeric characters
+    let numericValue = value.replace(/[^0-9]/g, '');
+    if (numericValue !== "" && parseInt(numericValue, 10) > 10) {
+      setPointsError("Maximum points is 10");
+      // Optionally, clamp the value to 10
+      setHabitPoints("10");
+    } else {
+      setPointsError("");
+      setHabitPoints(numericValue);
+    }
+  };
+
   const saveHabitToFirebase = async () => {
+    // Validate that the points field is provided
+    if (!habitPoints) {
+      setPointsError("Points field is required");
+      return;
+    }
+    if (parseInt(habitPoints, 10) > 10) {
+      setPointsError("Maximum points is 10");
+      return;
+    }
+    setPointsError("");
+
     const user = auth.currentUser;
     if (user) {
       try {
@@ -64,7 +87,7 @@ export default function CreateHabit() {
           colorName: selectedColor.name,
           goal: habitGoal,
           timesDone: 0,
-          habitPoints: parseInt(habitPoints, 10) || 0,
+          habitPoints: parseInt(habitPoints, 10),
         });
         console.log("Habit added successfully!");
         router.push("/tabs/Home");
@@ -73,9 +96,6 @@ export default function CreateHabit() {
       }
     }
   };
-
-  const incrementFrequency = () => setFrequencyCount((prev) => prev + 1);
-  const decrementFrequency = () => setFrequencyCount((prev) => (prev > 1 ? prev - 1 : 1));
 
   return (
     <SafeAreaView style={styles.screenContainer}>
@@ -129,40 +149,16 @@ export default function CreateHabit() {
             </View>
           </TouchableOpacity>
         </View>
-        <Text style={styles.label}>FREQUENCY</Text>
-        <View style={styles.frequencyContainer}>
-          <View style={styles.frequencyCountContainer}>
-            <Text style={styles.frequencyCount}>{frequencyCount} times</Text>
-            <View style={styles.arrowContainer}>
-              <TouchableOpacity onPress={incrementFrequency}>
-                <Text style={styles.arrow}>▲</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={decrementFrequency}>
-                <Text style={styles.arrow}>▼</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.frequencyOptions}>
-            <TouchableOpacity style={[styles.frequencyButton, styles.frequencyButtonSelected]}>
-              <Text style={styles.frequencyButtonTextActive}>Daily</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.frequencyButton}>
-              <Text style={styles.frequencyButtonText}>Weekly</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.frequencyButton}>
-              <Text style={styles.frequencyButtonText}>Monthly</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
         <Text style={styles.label}>POINTS</Text>
         <TextInput
           style={styles.input}
           value={habitPoints}
-          onChangeText={setHabitPoints}
+          onChangeText={handlePointsChange}
           placeholder="Enter points (e.g., 10)"
           placeholderTextColor="#666"
           keyboardType="numeric"
         />
+        {pointsError ? <Text style={styles.errorText}>{pointsError}</Text> : null}
         <TouchableOpacity style={styles.addButton} onPress={saveHabitToFirebase}>
           <Text style={styles.addButtonText}>Add Habit</Text>
         </TouchableOpacity>
@@ -271,18 +267,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#232323",
   },
-
   contentContainer: {
     flex: 1,
     padding: 20,
-    paddingBottom: 0, // Remove bottom padding from ScrollView
+    paddingBottom: 0,
   },
   label: {
     fontSize: 13,
     fontWeight: "bold",
     color: "#666",
     marginBottom: 6,
-    marginTop: 24, // Increase top margin for better spacing
+    marginTop: 24,
   },
   input: {
     fontSize: 16,
@@ -292,7 +287,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     color: "#333",
   },
-
   selectionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -326,69 +320,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
   },
-
-  frequencyContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7ED",
-    marginBottom: 40, // Increase bottom margin
-  },
-  frequencyCountContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  frequencyCount: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
-  arrowContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  arrow: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 16,
-  },
-  frequencyOptions: {
-    flexDirection: "row",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    padding: 4,
-  },
-  frequencyButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderRadius: 6,
-  },
-  frequencyButtonSelected: {
-    backgroundColor: "#fff",
-  },
-  frequencyButtonText: {
-    color: "#666",
-    fontWeight: "500",
-  },
-  frequencyButtonTextActive: {
-    color: "#4A60FF",
-    fontWeight: "600",
-  },
-
   addButton: {
     backgroundColor: "#4A60FF",
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
     marginTop: 40,
-    marginBottom: -10, // Creates hovering effect
-    marginHorizontal: 20, // Match parent padding
-    elevation: 4, // Add shadow for Android
-    shadowColor: "#000", // iOS shadow
+    marginBottom: -10,
+    marginHorizontal: 20,
+    elevation: 4,
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: -2,
@@ -402,7 +343,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 0.5,
   },
-
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
@@ -479,5 +419,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 16,
     fontWeight: "500",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: -15,
+    marginBottom: 10,
   },
 });
