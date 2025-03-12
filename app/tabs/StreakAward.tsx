@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Svg, Rect, Path } from "react-native-svg";
 
 /* ----------------- BACK BUTTON SVG ------------------ */
@@ -28,26 +28,31 @@ function BackButtonSvg({ width = 60, height = 60 }) {
 /* -------------- STREAK AWARD SCREEN -------------- */
 export default function StreakAward() {
   const router = useRouter();
+  const { streak } = useLocalSearchParams();
 
   return (
     <View style={styles.container}>
       {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <BackButtonSvg />
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push("/tabs/Home")}
+      >
+        <BackButtonSvg width={45} height={45} />
       </TouchableOpacity>
 
-      {/* Medal PNG */}
+      {/* Medal Image */}
       <View style={styles.medalContainer}>
         <Image
-          source={require("../../assets/images/accomplishment.png")} 
+          source={require("../../assets/images/accomplishment.png")}
           style={styles.medalImage}
         />
       </View>
 
       {/* Text content */}
       <Text style={styles.congratulationsText}>Congratulations!</Text>
-      <Text style={styles.descriptionText}>You just reached a habit goal!</Text>
-      <Text style={styles.subtext}>You completed a habit for 2 weeks straight.</Text>
+      <Text style={styles.descriptionText}>
+        You reached a streak of {streak} day{streak === "1" ? "" : "s"}!
+      </Text>
     </View>
   );
 }
@@ -81,7 +86,6 @@ const styles = StyleSheet.create({
     height: 300,
     resizeMode: "contain",
   },
-  // Bold text
   congratulationsText: {
     fontSize: 28,
     fontFamily: "OpenSans-Bold",
@@ -94,12 +98,5 @@ const styles = StyleSheet.create({
     color: "#FFF",
     textAlign: "center",
     marginBottom: 10,
-  },
-  // Semi-bold text
-  subtext: {
-    fontSize: 18,
-    fontFamily: "OpenSans-Medium",
-    color: "#FFF",
-    textAlign: "center",
   },
 });
