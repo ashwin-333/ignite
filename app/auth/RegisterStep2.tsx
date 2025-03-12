@@ -48,8 +48,8 @@ export default function RegisterStep2() {
 
       <TextInput style={styles.hiddenInput} autoFocus={false} />
 
-      <TouchableOpacity style={styles.nextButton} onPress={() => router.push("/auth/RegisterStep3")}>
-        <Text style={styles.nextText}>Next</Text>
+      <TouchableOpacity style={styles.nextButton} onPress={() => router.push("/tabs/Home")}>
+        <Text style={styles.nextText}>Finish</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );

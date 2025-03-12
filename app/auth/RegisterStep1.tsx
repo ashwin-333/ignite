@@ -60,7 +60,7 @@ export default function RegisterStep1() {
       }
 
       console.log("Google user signed up:", user.uid);
-      router.push("/auth/RegisterStep3");
+      router.push("/auth/RegisterStep2");
 
     } catch (error) {
       console.error("Google Sign-Up Error:", error);
