@@ -197,7 +197,7 @@ export default function HomeScreen() {
                 <Text style={styles.habitGoal}>{habit.goal}</Text>
               </View>
             </View>
-            <View style={{ flexDirection: "row" }}>
+            <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={styles.calendarWrapper}
                 onPress={() =>
@@ -210,7 +210,7 @@ export default function HomeScreen() {
                 <Text style={styles.calendarText}>📆</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.completeButton, { marginLeft: 8 }]}
+                style={[styles.completeButton, { marginLeft: 12 }]}
                 onPress={() => handleCompleteHabit(habit)}
               >
                 <Text style={styles.completeButtonText}>Complete</Text>
@@ -343,10 +343,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#777",
   },
+  buttonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   calendarWrapper: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#EBF2FF",
     justifyContent: "center",
     alignItems: "center",
@@ -354,7 +358,7 @@ const styles = StyleSheet.create({
     borderColor: "#ADC6FF",
   },
   calendarText: {
-    fontSize: 16,
+    fontSize: 20,
   },
   completeButton: {
     backgroundColor: "#4A60FF",
