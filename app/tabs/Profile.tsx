@@ -52,16 +52,19 @@ export default function ProfileScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
+
   const [myUserPoints, setMyUserPoints] = useState(0);
 
-  // Only two tabs: "Activity" and "Friends"
+  // Removed "Achievements" from the type since it's no longer used.
   const [activeTab, setActiveTab] = useState<"Activity" | "Friends">("Friends");
 
   const [friends, setFriends] = useState<Friend[]>([]);
+
   const [activityItems, setActivityItems] = useState<ActivityDoc[]>([]);
+
   const [allHabits, setAllHabits] = useState<Habit[]>([]);
 
-  // Fetch user document
+  // ---------------- 1) Fetch user’s doc
   useEffect(() => {
     const fetchUserData = async () => {
       const user = auth.currentUser;
@@ -80,7 +83,6 @@ export default function ProfileScreen() {
     fetchUserData();
   }, []);
 
-  // Fetch friends
   useEffect(() => {
     const fetchFriends = async () => {
       const user = auth.currentUser;
@@ -93,11 +95,13 @@ export default function ProfileScreen() {
       for (const docSnap of snapshot.docs) {
         const friendData = docSnap.data();
         const friendId = docSnap.id;
+
         let friendPoints = 0;
         const friendDocSnap = await getDoc(doc(db, "users", friendId));
         if (friendDocSnap.exists()) {
           friendPoints = friendDocSnap.data().userPoints || 0;
         }
+
         friendList.push({
           friendId,
           firstName: friendData.firstName || "Unknown",
@@ -111,23 +115,24 @@ export default function ProfileScreen() {
     fetchFriends();
   }, []);
 
-  // Fetch habits
   useEffect(() => {
     const fetchHabits = async () => {
       const user = auth.currentUser;
       if (!user) return;
+
       const habitsRef = collection(db, "users", user.uid, "habits");
       const snap = await getDocs(habitsRef);
+
       const loaded = snap.docs.map((d) => ({
         id: d.id,
         ...d.data(),
       })) as Habit[];
+
       setAllHabits(loaded);
     };
     fetchHabits();
   }, []);
 
-  // Fetch activities
   useEffect(() => {
     fetchActivitySubcollection();
   }, []);
@@ -135,13 +140,15 @@ export default function ProfileScreen() {
   const fetchActivitySubcollection = async () => {
     const user = auth.currentUser;
     if (!user) return;
+
     const activitiesRef = collection(db, "users", user.uid, "activities");
     const snap = await getDocs(activitiesRef);
+
     const loaded: ActivityDoc[] = [];
     snap.forEach((docSnap) => {
       const data = docSnap.data();
       loaded.push({
-        dateKey: docSnap.id,
+        dateKey: docSnap.id, // "2023-06-24"
         type: data.type || "points",
         points: data.points || 0,
         timestamp: data.timestamp || "",
@@ -149,11 +156,11 @@ export default function ProfileScreen() {
         trend: data.trend || "up",
       });
     });
+
     loaded.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
     setActivityItems(loaded);
   };
 
-  // Helper functions for activity dates
   function getDateKey(d: Date) {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -179,6 +186,7 @@ export default function ProfileScreen() {
   const handleRemoveFriend = async (friendUid: string) => {
     const currentUser = auth.currentUser;
     if (!currentUser) return;
+
     try {
       await deleteDoc(doc(db, "users", currentUser.uid, "friends", friendUid));
       await deleteDoc(doc(db, "users", friendUid, "friends", currentUser.uid));
@@ -191,21 +199,29 @@ export default function ProfileScreen() {
   const handleUpdateActivity = async () => {
     const user = auth.currentUser;
     if (!user) return;
+
     const now = new Date();
     const todayKey = getDateKey(now);
+
     let totalDailyPoints = 0;
+
     allHabits.forEach((habit) => {
       const doneDates = habit.doneDates || [];
       const habitPts = habit.habitPoints || 0;
+
       const completionsToday = doneDates.filter((iso) =>
         isSameDay(new Date(iso), now)
       ).length;
+
       totalDailyPoints += completionsToday * habitPts;
     });
+
     const activitiesRef = collection(db, "users", user.uid, "activities");
     const activityRef = doc(activitiesRef, todayKey);
+
     const docSnap = await getDoc(activityRef);
     const newTimestamp = now.toISOString();
+
     if (docSnap.exists()) {
       await updateDoc(activityRef, {
         points: totalDailyPoints,
@@ -220,6 +236,7 @@ export default function ProfileScreen() {
         trend: "up",
       });
     }
+
     fetchActivitySubcollection();
   };
 
@@ -231,12 +248,16 @@ export default function ProfileScreen() {
       >
         <Text style={styles.updateActivityButtonText}>Update Activity</Text>
       </TouchableOpacity>
+
       <ScrollView contentContainerStyle={styles.friendsContainer}>
         <Text style={styles.friendsTitle}>Your Daily Points</Text>
+
         {activityItems.map((act) => {
           const dateObj = new Date(act.timestamp);
           const shortTime = formatTime(act.timestamp);
+
           const isToday = isSameDay(dateObj, new Date());
+
           return (
             <View key={act.dateKey} style={styles.friendCard}>
               <View style={styles.friendInfo}>
@@ -281,6 +302,7 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             </View>
+
             <TouchableOpacity
               style={styles.trashButtonBox}
               onPress={() => handleRemoveFriend(friend.friendId)}
@@ -314,6 +336,7 @@ export default function ProfileScreen() {
             />
           </TouchableOpacity>
         </View>
+
         <View style={styles.userInfoRow}>
           <Image
             source={
@@ -331,13 +354,18 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+
         {/* TABS */}
         <View style={styles.tabPill}>
           <TouchableOpacity
             style={[styles.tabItem, activeTab === "Activity" && styles.activeTab]}
             onPress={() => setActiveTab("Activity")}
           >
-            <Text style={activeTab === "Activity" ? styles.activeTabText : styles.tabText}>
+            <Text
+              style={
+                activeTab === "Activity" ? styles.activeTabText : styles.tabText
+              }
+            >
               Activity
             </Text>
           </TouchableOpacity>
@@ -345,7 +373,11 @@ export default function ProfileScreen() {
             style={[styles.tabItem, activeTab === "Friends" && styles.activeTab]}
             onPress={() => setActiveTab("Friends")}
           >
-            <Text style={activeTab === "Friends" ? styles.activeTabText : styles.tabText}>
+            <Text
+              style={
+                activeTab === "Friends" ? styles.activeTabText : styles.tabText
+              }
+            >
               Friends
             </Text>
           </TouchableOpacity>
@@ -353,6 +385,7 @@ export default function ProfileScreen() {
       </View>
       {activeTab === "Activity" && renderActivityTab()}
       {activeTab === "Friends" && renderFriendsTab()}
+
       <View style={styles.bottomNav}>
         <TouchableOpacity onPress={() => router.push("/tabs/Home")}>
           <Image
@@ -393,39 +426,217 @@ export default function ProfileScreen() {
   );
 }
 
+// -------------- STYLES --------------
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: "#F5F7FE" },
-  topContainer: { backgroundColor: "#fff", paddingBottom: 20 },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 20 },
-  headerTitle: { fontSize: 22, fontWeight: "bold", color: "#232323" },
-  logoutButtonBox: { width: 40, height: 40, backgroundColor: "#fff", borderRadius: 12, borderWidth: 1, borderColor: "#E5E7ED", justifyContent: "center", alignItems: "center" },
-  logoutIcon: { width: 20, height: 20, resizeMode: "contain" },
-  userInfoRow: { flexDirection: "row", alignItems: "center", marginHorizontal: 16, marginTop: 15 },
-  profileImage: { width: 60, height: 60, borderRadius: 30, backgroundColor: "#ccc" },
-  userDetails: { marginLeft: 12 },
-  userName: { fontSize: 18, fontWeight: "600", color: "#333" },
-  pointsContainer: { flexDirection: "row", alignItems: "center", marginTop: 4, backgroundColor: "#FFF3D0", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, alignSelf: "flex-start" },
-  pointsMedal: { fontSize: 16, marginRight: 4 },
-  pointsText: { fontSize: 14, fontWeight: "600", color: "#DAA520" },
-  tabPill: { flexDirection: "row", backgroundColor: "#E5E7ED", borderRadius: 25, padding: 4, marginHorizontal: 16, marginTop: 20, justifyContent: "space-between", alignItems: "center" },
-  tabItem: { flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 20 },
-  tabText: { color: "#666", fontWeight: "500" },
-  activeTab: { backgroundColor: "#fff" },
-  activeTabText: { color: "#4A60FF", fontWeight: "600" },
-  friendsContainer: { paddingHorizontal: 20, paddingBottom: 120 },
-  friendsTitle: { marginTop: 20, fontSize: 16, fontWeight: "bold", marginBottom: 10, color: "#333" },
-  friendCard: { flexDirection: "row", justifyContent: "space-between", backgroundColor: "#fff", padding: 15, borderRadius: 12, alignItems: "center", marginBottom: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 3, elevation: 2 },
-  friendInfo: { flexDirection: "row", alignItems: "center" },
-  friendAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#ccc", marginRight: 10 },
-  friendName: { fontSize: 16, fontWeight: "500", color: "#333" },
-  friendPoints: { fontSize: 14, color: "#777" },
-  trashButtonBox: { width: 40, height: 40, backgroundColor: "#fff", borderRadius: 12, borderWidth: 1, borderColor: "#E5E7ED", justifyContent: "center", alignItems: "center" },
-  trashIcon: { width: 20, height: 20, resizeMode: "contain" },
-  updateActivityButton: { backgroundColor: "#4A60FF", padding: 12, borderRadius: 8, marginTop: 10, marginHorizontal: 20, alignItems: "center" },
-  updateActivityButtonText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  bottomNav: { position: "absolute", bottom: 20, alignSelf: "center", width: "90%", height: 60, backgroundColor: "#fff", borderRadius: 40, flexDirection: "row", justifyContent: "space-evenly", alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 4 },
-  navIcon: { width: 24, height: 24, resizeMode: "contain" },
-  activeNavIcon: { tintColor: "#4A60FF" },
-  plusCircle: { width: 48, height: 48, resizeMode: "contain" },
-  plusIcon: { position: "absolute", width: 22, height: 22, tintColor: "#fff", left: 13, top: 13 },
+  screenContainer: {
+    flex: 1,
+    backgroundColor: "#F5F7FE",
+  },
+  topContainer: {
+    backgroundColor: "#fff",
+    paddingBottom: 20,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 20,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#232323",
+  },
+  logoutButtonBox: {
+    width: 40,
+    height: 40,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7ED",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  logoutIcon: {
+    width: 20,
+    height: 20,
+    resizeMode: "contain",
+  },
+  userInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginTop: 15,
+  },
+  profileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#ccc",
+  },
+  userDetails: {
+    marginLeft: 12,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+  },
+  pointsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    backgroundColor: "#FFF3D0",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+  pointsMedal: {
+    fontSize: 16,
+    marginRight: 4,
+  },
+  pointsText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#DAA520",
+  },
+  tabPill: {
+    flexDirection: "row",
+    backgroundColor: "#E5E7ED",
+    borderRadius: 25,
+    padding: 4,
+    marginHorizontal: 16,
+    marginTop: 20,
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  tabText: {
+    color: "#666",
+    fontWeight: "500",
+  },
+  activeTab: {
+    backgroundColor: "#fff",
+  },
+  activeTabText: {
+    color: "#4A60FF",
+    fontWeight: "600",
+  },
+  friendsContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 120,
+  },
+  friendsTitle: {
+    marginTop: 20,
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+  friendCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  friendInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  friendAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#ccc",
+    marginRight: 10,
+  },
+  friendName: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+  },
+  friendPoints: {
+    fontSize: 14,
+    color: "#777",
+  },
+  trashButtonBox: {
+    width: 40,
+    height: 40,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7ED",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  trashIcon: {
+    width: 20,
+    height: 20,
+    resizeMode: "contain",
+  },
+  updateActivityButton: {
+    backgroundColor: "#4A60FF",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    marginHorizontal: 20,
+    alignItems: "center",
+  },
+  updateActivityButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  bottomNav: {
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
+    width: "90%",
+    height: 60,
+    backgroundColor: "#fff",
+    borderRadius: 40,
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  navIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: "contain",
+  },
+  activeNavIcon: {
+    tintColor: "#4A60FF",
+  },
+  plusCircle: {
+    width: 48,
+    height: 48,
+    resizeMode: "contain",
+  },
+  plusIcon: {
+    position: "absolute",
+    width: 22,
+    height: 22,
+    tintColor: "#fff",
+    left: 13,
+    top: 13,
+  },
 });
