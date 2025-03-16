@@ -48,4 +48,4 @@ Before getting started, ensure you have the following installed:
    - View your **streaks and leaderboards**
 
 ## **Project Documentation**
-For a detailed breakdown of the app's architecture, features, and development process, check out our **[Project Documentation]([https://your-documentation-link.com/](https://drive.google.com/drive/folders/1My5z49qPy2h6xCVJAIuNypgWTBHHSvuq?dmr=1&ec=wgc-drive-globalnav-goto))**.
+For a detailed breakdown of the app's architecture, features, and development process, check out our **[Project Documentation](https://drive.google.com/drive/folders/1My5z49qPy2h6xCVJAIuNypgWTBHHSvuq?usp=sharing)**.
