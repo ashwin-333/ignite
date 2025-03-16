@@ -1,13 +1,51 @@
-# ignite
+# **Ignite - Habit Tracking App**
 
-The Problem it Solves - Many individuals struggle to stick to habits because of a lack of visibility into their progress and consistency. Traditional habit trackers often feel overwhelming or fail to provide actionable insights.
+Welcome to **Ignite**, a habit-tracking app designed to help users stay consistent with their goals through streak tracking, leaderboards, and real-time progress visualization.
 
-Habit Heatmap solves this problem by: Visualizing Progress: Users can see their habit completion trends over time in a heatmap format, making it easy to spot patterns and stay consistent. Promoting Accountability: The app encourages users to meet their weekly goals and rewards them with streaks for consistency. Simplifying Habit Management: With a clean and intuitive UI, it’s easy to add, update, and track habits on a weekly or monthly basis.
+## **Getting Started: Running Ignite Locally**
+Follow these steps to set up and run Ignite on your local machine.
 
-Whether it's developing a reading habit, maintaining a workout routine, or simply tracking personal growth, Habit Heatmap makes habit formation fun, interactive, and achievable.
+### **Prerequisites**
+Before getting started, ensure you have the following installed:
+- **Node.js** (Recommended: v16 or later) - [Download here](https://nodejs.org/)
+- **Expo CLI** (For React Native development)
+  ```sh
+  npm install -g expo-cli
+  ```
+- **Git** (To clone the repository) - [Download here](https://git-scm.com/)
+- **Firebase Project Setup** (Create a Firebase project and configure `firebaseConfig.js`)
 
-Features Dynamic Calendar Heatmap: Displays daily habit completion with color-coded intensity. Weekly Goals: Allows users to set and track goals for each habit (e.g., "2 times per week"). Streak Tracking: Tracks longest and current streaks for each habit to keep users motivated. Multi-Habit Management: Supports tracking multiple habits simultaneously.
+### **Installation Steps**
+1. **Clone the Repository**
+   ```sh
+   git clone https://github.com/your-team/ignite-habit-tracker.git
+   cd ignite-habit-tracker
+   ```
 
-Tech Stack Frontend React Native (TypeScript): Cross-platform mobile app. React Native Calendars: To display the interactive calendar heatmap. Backend Node.js with Express.js: Provides RESTful APIs for managing habit data and syncing user information. Firebase Firestore & Auth: Stores user habits, streaks, and goals in real-time/ Secures user login and account management. EXTRA Firebase Cloud Functions: Handles backend logic like streak calculations and automated notifications.
+2. **Install Dependencies**
+   ```sh
+   npm install
+   ```
 
-Conclusion Habit Heatmap allows users to take control of their habits with a clear and engaging interface. By providing a powerful visual representation of progress and ensuring simplicity, this app stands out as a practical solution for anyone looking to create lasting habits.
+3. **Set Up Firebase**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a project and enable **Authentication** and **Firestore Database**
+   - Add a new **Web App** and copy the Firebase config
+   - Replace the contents of `firebaseConfig.js` with your Firebase credentials
+
+4. **Run the App**
+   - Start the Expo development server:
+     ```sh
+     npm start
+     ```
+   - Scan the QR code in your Expo Go app (iOS/Android) or run it on an emulator:
+     - iOS: `npm run ios`
+     - Android: `npm run android`
+
+5. **Sign Up and Start Tracking Habits!**
+   - Create an account using **email/password** or **Google sign-in**
+   - Set up your **first habits**
+   - View your **streaks and leaderboards**
+
+## **Project Documentation**
+For a detailed breakdown of the app's architecture, features, and development process, check out our **[Project Documentation]([https://your-documentation-link.com/](https://drive.google.com/drive/folders/1My5z49qPy2h6xCVJAIuNypgWTBHHSvuq?dmr=1&ec=wgc-drive-globalnav-goto))**.
