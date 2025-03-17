@@ -219,39 +219,39 @@ export default function HomeScreen() {
       <View style={styles.bottomNav}>
         <TouchableOpacity onPress={() => router.push("/tabs/Home")}>
           <Image
-            source={require("../../assets/images/homelogo.svg")}
+            source={require("../../assets/images/homelogo.png")}
             style={[styles.navIcon, styles.activeNavIcon]}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/tabs/Explore")}>
           <Image
-            source={require("../../assets/images/directionlogo.svg")}
+            source={require("../../assets/images/directionlogo.png")}
             style={styles.navIcon}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/tabs/CreateHabits")}>
           <Image
-            source={require("../../assets/images/Shape.svg")}
+            source={require("../../assets/images/Shape.png")}
             style={styles.plusCircle}
           />
           <Image
-            source={require("../../assets/images/Shape-1.svg")}
+            source={require("../../assets/images/Shape-1.png")}
             style={styles.plusIcon}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/tabs/Leaderboards")}>
           <Image
-            source={require("../../assets/images/awardslogo.svg")}
+            source={require("../../assets/images/awardslogo.png")}
             style={styles.navIcon}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/tabs/Profile")}>
           <Image
-            source={require("../../assets/images/profilelogo.svg")}
+            source={require("../../assets/images/profilelogo.png")}
             style={styles.navIcon}
           />
         </TouchableOpacity>

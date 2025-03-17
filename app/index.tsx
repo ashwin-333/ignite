@@ -23,7 +23,7 @@ export default function Index() {
       style={styles.container}
     >
       <View style={styles.logoContainer}>
-        <Image source={require("../assets/images/igniteee.svg")} style={styles.textLogo} />
+        <Image source={require("../assets/images/igniteee.png")} style={styles.textLogo} />
       </View>
 
       <View style={styles.buttonContainer}>

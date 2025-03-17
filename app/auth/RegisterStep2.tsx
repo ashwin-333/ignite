@@ -36,9 +36,9 @@ export default function RegisterStep2() {
           <Image source={{ uri: image }} style={styles.image} />
         ) : (
           <View style={styles.placeholder}>
-            <Image source={require("../../assets/images/Default_pfp.svg.png")} style={styles.placeholderImage} />
+            <Image source={require("../../assets/images/Default_pfp.png.png")} style={styles.placeholderImage} />
           </View>
-          
+
         )}
       </TouchableOpacity>
 

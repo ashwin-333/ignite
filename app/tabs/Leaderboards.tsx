@@ -31,7 +31,7 @@ export default function Leaderboards() {
       // Get current user's friends
       const friendsRef = collection(db, "users", user.uid, "friends");
       const friendsSnapshot = await getDocs(friendsRef);
-      
+
       // Get points data for friends and current user
       const pointsPromises = [
         // Include current user
@@ -95,19 +95,19 @@ export default function Leaderboards() {
             {/* 2ND PLACE */}
             <View style={[styles.topItemWrapper, styles.secondPlacePosition]}>
               <Image
-                source={require("../../assets/images/Default_pfp.svg.png")}
+                source={require("../../assets/images/Default_pfp.png.png")}
                 style={styles.profilePic}
               />
               <Text style={styles.nameText}>
                 {topThree[1]?.name || "User"}
               </Text>
               <Image
-                source={require("../../assets/images/2nd.svg")}
+                source={require("../../assets/images/2nd.png")}
                 style={styles.rankShape}
               />
               <View style={styles.medalBox}>
                 <Image
-                  source={require("../../assets/images/medal.svg")}
+                  source={require("../../assets/images/medal.png")}
                   style={styles.medalIcon}
                 />
                 <Text style={styles.medalText}>
@@ -119,23 +119,23 @@ export default function Leaderboards() {
             {/* 1ST PLACE */}
             <View style={[styles.topItemWrapper, styles.firstPlacePosition]}>
               <Image
-                source={require("../../assets/images/crown.svg")}
+                source={require("../../assets/images/crown.png")}
                 style={styles.crown}
               />
               <Image
-                source={require("../../assets/images/Default_pfp.svg.png")}
+                source={require("../../assets/images/Default_pfp.png.png")}
                 style={styles.profilePic}
               />
               <Text style={styles.nameText}>
                 {topThree[0]?.name || "User"}
               </Text>
               <Image
-                source={require("../../assets/images/1st.svg")}
+                source={require("../../assets/images/1st.png")}
                 style={styles.rankShape}
               />
               <View style={styles.medalBox}>
                 <Image
-                  source={require("../../assets/images/medal.svg")}
+                  source={require("../../assets/images/medal.png")}
                   style={styles.medalIcon}
                 />
                 <Text style={styles.medalText}>
@@ -147,19 +147,19 @@ export default function Leaderboards() {
             {/* 3RD PLACE */}
             <View style={[styles.topItemWrapper, styles.thirdPlacePosition]}>
               <Image
-                source={require("../../assets/images/Default_pfp.svg.png")}
+                source={require("../../assets/images/Default_pfp.png.png")}
                 style={styles.profilePic}
               />
               <Text style={styles.nameText}>
                 {topThree[2]?.name || "User"}
               </Text>
               <Image
-                source={require("../../assets/images/3rd.svg")}
+                source={require("../../assets/images/3rd.png")}
                 style={styles.rankShape}
               />
               <View style={styles.medalBox}>
                 <Image
-                  source={require("../../assets/images/medal.svg")}
+                  source={require("../../assets/images/medal.png")}
                   style={styles.medalIcon}
                 />
                 <Text style={styles.medalText}>
@@ -179,7 +179,7 @@ export default function Leaderboards() {
                   <Text style={styles.userPoints}>{user.points} Points</Text>
                 </View>
                 <Image
-                  source={require("../../assets/images/Default_pfp.svg.png")}
+                  source={require("../../assets/images/Default_pfp.png.png")}
                   style={styles.userAvatar}
                 />
               </View>
@@ -192,39 +192,39 @@ export default function Leaderboards() {
       <View style={styles.bottomNav}>
         <TouchableOpacity onPress={() => router.push("/tabs/Home")}>
           <Image
-            source={require("../../assets/images/homelogo.svg")}
+            source={require("../../assets/images/homelogo.png")}
             style={styles.navIcon}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/tabs/Explore")}>
           <Image
-            source={require("../../assets/images/directionlogo.svg")}
+            source={require("../../assets/images/directionlogo.png")}
             style={styles.navIcon}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/tabs/CreateHabits")}>
           <Image
-            source={require("../../assets/images/Shape.svg")}
+            source={require("../../assets/images/Shape.png")}
             style={styles.plusCircle}
           />
           <Image
-            source={require("../../assets/images/Shape-1.svg")}
+            source={require("../../assets/images/Shape-1.png")}
             style={styles.plusIcon}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/tabs/Leaderboards")}>
           <Image
-            source={require("../../assets/images/awardslogo.svg")}
+            source={require("../../assets/images/awardslogo.png")}
             style={[styles.navIcon, styles.activeNavIcon]}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/tabs/Profile")}>
           <Image
-            source={require("../../assets/images/profilelogo.svg")}
+            source={require("../../assets/images/profilelogo.png")}
             style={styles.navIcon}
           />
         </TouchableOpacity>
