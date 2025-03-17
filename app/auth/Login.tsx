@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithCredential } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
@@ -16,14 +16,36 @@ export default function LoginScreen() {
   const handleGoogleSignIn = async () => {
     try {
       const result = await GoogleSignin.signIn();
-      if (!result.data) {
-        throw new Error("Google Sign-In result data is null");
+      const tokens = await GoogleSignin.getTokens();
+      if (!tokens.idToken) {
+        throw new Error("Google Sign-In didn't return an ID token");
       }
-      console.log("User signed in:", result.data.user);
+      
+      // Create a Firebase credential with the Google ID token
+      const credential = GoogleAuthProvider.credential(tokens.idToken);
+      
+      // Sign in to Firebase with the Google credential
+      const userCredential = await signInWithCredential(auth, credential);
+      const firebaseUser = userCredential.user;
+      
+      // Now use the Firebase UID for Firestore operations
+      const userRef = doc(db, "users", firebaseUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      // Get user info from Google sign-in
+      if (!result.data) {
+        throw new Error("Google Sign-In didn't return user data");
+      }
+      const googleUser = result.data.user;
+      const firstName = googleUser.givenName || "Unknown";
+      const lastName = googleUser.familyName || "Unknown";
+
+      console.log("Google user signed in:", firebaseUser.uid);
       router.push("/tabs/Home");
+
     } catch (error) {
-      console.error("Google Sign-In Error:", (error as any).message);
-      alert("Error signing in with Google: " + (error as any).message);
+      console.error("Google Sign-In Error:", error);
+      alert("Error signing in with Google. Please try again.");
     }
   };
 

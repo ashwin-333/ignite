@@ -18,6 +18,7 @@ import {
   updateDoc,
   deleteDoc,
 } from "firebase/firestore";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 interface Friend {
   friendId: string;
@@ -326,15 +327,23 @@ export default function ProfileScreen() {
       <View style={styles.topContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>Your Profile</Text>
-          <TouchableOpacity
+            <TouchableOpacity
             style={styles.logoutButtonBox}
-            onPress={() => router.push("/")}
-          >
+            onPress={async () => {
+              try {
+              await GoogleSignin.signOut();
+              await auth.signOut();
+              router.push("/");
+              } catch (error) {
+              console.error("Error signing out:", error);
+              }
+            }}
+            >
             <Image
               source={require("../../assets/images/logout.png")}
               style={styles.logoutIcon}
             />
-          </TouchableOpacity>
+            </TouchableOpacity>
         </View>
 
         <View style={styles.userInfoRow}>
