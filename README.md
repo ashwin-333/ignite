@@ -27,13 +27,7 @@ Before getting started, ensure you have the following installed:
    npm install
    ```
 
-3. **Set Up Firebase**
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create a project and enable **Authentication** and **Firestore Database**
-   - Add a new **Web App** and copy the Firebase config
-   - Replace the contents of `firebaseConfig.js` with your Firebase credentials
-
-4. **Run the App**
+3. **Run the App**
    - Start the Expo development server:
      ```sh
      npm start
@@ -42,7 +36,7 @@ Before getting started, ensure you have the following installed:
      - iOS: `npm run ios`
      - Android: `npm run android`
 
-5. **Sign Up and Start Tracking Habits!**
+4. **Sign Up and Start Tracking Habits!**
    - Create an account using **email/password** or **Google sign-in**
    - Set up your **first habits**
    - View your **streaks and leaderboards**
