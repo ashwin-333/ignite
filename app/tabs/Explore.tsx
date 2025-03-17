@@ -244,8 +244,8 @@ const styles = StyleSheet.create({
   topContainer: {
     backgroundColor: "#fff",
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 15,
+    paddingTop: 60,
+    paddingBottom: 10,
   },
   headerTitle: {
     fontSize: 22,

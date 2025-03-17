@@ -291,7 +291,8 @@ const styles = StyleSheet.create({
   topContainer: {
     backgroundColor: "#fff",
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingTop: 60,
+    paddingBottom: 10,
   },
   greeting: {
     fontSize: 24,
