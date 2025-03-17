@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { auth, db, googleProvider } from "../firebaseConfig";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+GoogleSignin.configure();
 
 export default function RegisterStep1() {
   const router = useRouter();
@@ -16,18 +19,18 @@ export default function RegisterStep1() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-  
+
       await setDoc(doc(db, "users", user.uid), {
         firstName,
         lastName,
         email,
         profilePicture: null,
       });
-  
+
       console.log("User created:", user.uid);
-  
+
       router.push("/auth/RegisterStep2");
-  
+
     } catch (error) {
       console.error("Sign-up Error:", error);
       if (error instanceof Error) {
@@ -37,29 +40,43 @@ export default function RegisterStep1() {
       }
     }
   };
-
   const handleGoogleSignUp = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-
-      const displayName = user.displayName ? user.displayName.split(" ") : ["", ""];
-      const firstName = displayName[0] || "Unknown";
-      const lastName = displayName.length > 1 ? displayName.slice(1).join(" ") : "User";
-
-      const userRef = doc(db, "users", user.uid);
+      const result = await GoogleSignin.signIn();
+      const tokens = await GoogleSignin.getTokens();
+      if (!tokens.idToken) {
+        throw new Error("Google Sign-In didn't return an ID token");
+      }
+      
+      // Create a Firebase credential with the Google ID token
+      const credential = GoogleAuthProvider.credential(tokens.idToken);
+      
+      // Sign in to Firebase with the Google credential
+      const userCredential = await signInWithCredential(auth, credential);
+      const firebaseUser = userCredential.user;
+      
+      // Now use the Firebase UID for Firestore operations
+      const userRef = doc(db, "users", firebaseUser.uid);
       const userSnap = await getDoc(userRef);
+
+      // Get user info from Google sign-in
+      if (!result.data) {
+        throw new Error("Google Sign-In didn't return user data");
+      }
+      const googleUser = result.data.user;
+      const firstName = googleUser.givenName || "Unknown";
+      const lastName = googleUser.familyName || "Unknown";
 
       if (!userSnap.exists()) {
         await setDoc(userRef, {
           firstName,
           lastName,
-          email: user.email,
-          profilePicture: user.photoURL || null,
+          email: googleUser.email,
+          profilePicture: googleUser.photo || null,
         });
       }
 
-      console.log("Google user signed up:", user.uid);
+      console.log("Google user signed up:", firebaseUser.uid);
       router.push("/auth/RegisterStep2");
 
     } catch (error) {
@@ -68,11 +85,14 @@ export default function RegisterStep1() {
     }
   };
 
+
+
+
   return (
     <View style={styles.container}>
-    <TouchableOpacity onPress={() => router.push("/")} style={styles.backButton}>
-      <Text style={styles.backButtonText}>←</Text>
-    </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push("/")} style={styles.backButton}>
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
 
 
       <Text style={styles.title}>Sign up</Text>

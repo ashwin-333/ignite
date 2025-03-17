@@ -4,6 +4,9 @@ import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+
+GoogleSignin.configure();
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -12,8 +15,11 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const result = await signInWithPopup(auth, new GoogleAuthProvider());
-      console.log("User signed in:", result.user);
+      const result = await GoogleSignin.signIn();
+      if (!result.data) {
+        throw new Error("Google Sign-In result data is null");
+      }
+      console.log("User signed in:", result.data.user);
       router.push("/tabs/Home");
     } catch (error) {
       console.error("Google Sign-In Error:", (error as any).message);
@@ -94,7 +100,7 @@ export default function LoginScreen() {
           <Text style={styles.googleButtonText}>Sign in with Google</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.push("/auth/RegisterStep1")}
           style={styles.signupContainer}
         >

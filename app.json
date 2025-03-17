@@ -1,21 +1,24 @@
 {
   "expo": {
-    "name": "habit-heatmap",
-    "slug": "habit-heatmap",
+    "name": "ignite",
+    "slug": "ignite",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/igniteee.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sparklabs.ignite",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/igniteee.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.sparklabs.ignite"
     },
     "web": {
       "bundler": "metro",
@@ -23,10 +26,11 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-google-signin/google-signin",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/igniteee.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
